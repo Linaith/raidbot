@@ -1,5 +1,4 @@
 ﻿using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ namespace Raidbot
 {
     public static class PlannedRaids
     {
-        private static readonly string _jsonFile = Path.Combine("plannedRaids.json");
+        private static readonly string _jsonFile = Path.Combine(Constants.SAVEFOLDER, "plannedRaids.json");
         private static Dictionary<string, Raid> Raids { get; set; }
         private static readonly Random _random = new Random();
         private const int REMINDER_ITERVAL = 30;

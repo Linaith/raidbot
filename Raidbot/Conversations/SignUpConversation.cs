@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Raidbot.Raid;
 
@@ -131,8 +132,15 @@ namespace Raidbot
                     }
                     break;
                 case State.account:
-                    _usedAccount = message;
-                    AddUser();
+                    if (Regex.IsMatch(message, Constants.ACCOUNT_REGEX))
+                    {
+                        _usedAccount = message;
+                        AddUser();
+                    }
+                    else
+                    {
+                        await UserExtensions.SendMessageAsync(_user, "Invalid Account Name, please try again. \nDon't forget the numbers. eg: Account Name.1234");
+                    }
                     break;
             }
         }

@@ -35,6 +35,11 @@ namespace Raidbot
             await _client.StartAsync();
             Reminder.Start();
 
+            if (!Directory.Exists(Constants.SAVEFOLDER))
+            {
+                Directory.CreateDirectory(Constants.SAVEFOLDER);
+            }
+
             CommandService commandService = new CommandService();
             CommandHandler commandHandler = new CommandHandler(_client, commandService);
             await commandHandler.InstallCommandsAsync();

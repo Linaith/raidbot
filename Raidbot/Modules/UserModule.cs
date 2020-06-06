@@ -78,8 +78,11 @@ namespace Raidbot.Modules
             [Summary("add an api key")]
             public async Task AddAccountAsync(string accountname)
             {
-                await UserManagement.AddGuildwars2Account(Context.User.Id, accountname, Context.Guild.Id);
-                await Context.Channel.SendMessageAsync("Account was added.");
+                if (await UserManagement.AddGuildwars2Account(Context.User.Id, accountname, Context.Guild.Id))
+                {
+                    await Context.Channel.SendMessageAsync("Account was added.");
+                }
+                await Context.Channel.SendMessageAsync("Invalid account name.");
             }
         }
     }

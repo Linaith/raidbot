@@ -1,6 +1,4 @@
 ﻿using Discord;
-using Gw2Sharp.WebApi.V2;
-using Raidbot;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,7 +8,7 @@ namespace Raidbot
 {
     public static class DiscordRoles
     {
-        private static readonly string _jsonFile = Path.Combine("roleMessages.json");
+        private static readonly string _jsonFile = Path.Combine(Constants.SAVEFOLDER, "roleMessages.json");
 
         //  guildId, RoleMessage
         private static Dictionary<ulong, RoleMessage> _roleMessages = new Dictionary<ulong, RoleMessage>();
@@ -29,6 +27,7 @@ namespace Raidbot
 
         private static readonly Dictionary<IEmote, string> _roles = new Dictionary<IEmote, string>()
         {
+            {new Emoji("\u2611"), "Raid"},
             {new Emoji("\u0031\uFE0F\u20E3"), "w1"},
             {new Emoji("\u0032\uFE0F\u20E3"), "w2"},
             {new Emoji("\u0033\uFE0F\u20E3"), "w3"},
@@ -38,8 +37,12 @@ namespace Raidbot
             {new Emoji("\u0037\uFE0F\u20E3"), "w7"},
         //    {new Emoji("\u0038\uFE0F\u20E3"), "w8"},
         //    {new Emoji("\u0039\uFE0F\u20E3"), "w9"},
-            {new Emoji("\u2705"), "w1-7"},
-            {new Emoji("\uD83D\uDC80"), "Raid Training"}
+            {new Emoji("♾️"), "w1-7"},
+            {new Emoji("🇹"), "Raid Training"},
+            {new Emoji("\u203C"), "Fractal Training"},
+            {new Emoji("\uD83D\uDCAF"), "Fractals"},
+            {new Emoji("🏴‍☠️"), "Dungeons"},
+            {new Emoji("⚔️"), "StrikeMissions"}
         };
 
         static DiscordRoles()

@@ -10,4 +10,13 @@
     <PackageReference Include="Gw2Sharp" Version="0.10.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="debugtoken.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="token.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

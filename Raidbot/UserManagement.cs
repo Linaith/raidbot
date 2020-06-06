@@ -1,18 +1,15 @@
 ﻿using Discord;
-using Discord.Rest;
-using Gw2Sharp.WebApi;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Raidbot
 {
     public static class UserManagement
     {
-        private static readonly string _jsonFile = Path.Combine("users.json");
+        private static readonly string _jsonFile = Path.Combine(Constants.SAVEFOLDER, "users.json");
 
         //discordId, User
         private static Dictionary<ulong, User> _users;
@@ -56,10 +53,14 @@ namespace Raidbot
             }
         }
 
-        public static async Task AddGuildwars2Account(ulong userId, string accountName, ulong? guildId = null)
+        public static async Task<bool> AddGuildwars2Account(ulong userId, string accountName, ulong? guildId = null)
         {
             try
             {
+                if (!Regex.IsMatch(accountName, Constants.ACCOUNT_REGEX))
+                {
+                    return false;
+                }
                 if (!_users.ContainsKey(userId))
                 {
                     _users.Add(userId, new User(accountName, string.Empty));
@@ -79,6 +80,7 @@ namespace Raidbot
             {
                 //TODO: exception handling?
             }
+            return true;
         }
 
         public static async Task<bool> RemoveGuildWars2Account(ulong userId, string accountName, ulong? guildId = null)
@@ -148,7 +150,11 @@ namespace Raidbot
 
         public static IEnumerable<string> GetGuildWars2AccountNames(ulong userId)
         {
-            return _users[userId].GuildWars2Accounts.Keys;
+            if (_users.ContainsKey(userId))
+            {
+                return _users[userId].GuildWars2Accounts.Keys;
+            }
+            return new List<string>();
         }
 
         private static void SaveUsers()

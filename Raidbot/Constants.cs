@@ -1,8 +1,5 @@
 ﻿using Discord;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 
 namespace Raidbot
 {
@@ -17,6 +14,8 @@ namespace Raidbot
         public static Emoji UnsureEmoji = new Emoji("\u2754");
         public static Emoji BackupEmoji = new Emoji("\uD83C\uDCCF");
         public static Emoji FlexEmoji = new Emoji("\u2755");
+        public const string SAVEFOLDER = "data";
+        public const string ACCOUNT_REGEX = "^[a-zA-z ]{3,27}\\.[0-9]{4}$";
 
 
         /*
