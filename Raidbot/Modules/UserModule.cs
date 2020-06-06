@@ -16,7 +16,8 @@ namespace Raidbot.Modules
                 "!user add account <AccountName> -  Adds an account without apikey to your user.\n" +
                 "!user remove <AccountName>  -  Removes the account from your user.\n" +
                 "!user change <AccountNAme>  -  Changes your main Account. This affects your discorn Name on the Server.\n" +
-                "!user list  -  Lists all your accounts.";
+                "!user list  -  Lists all your accounts.\n" +
+                "*Accounts containing a space caracter have to be placed in quatation marks. e.g.: \n!user change \"Test Account.1234\"*";
             await ReplyAsync(helpMessage);
         }
 
@@ -81,6 +82,7 @@ namespace Raidbot.Modules
                 if (await UserManagement.AddGuildwars2Account(Context.User.Id, accountname, Context.Guild.Id))
                 {
                     await Context.Channel.SendMessageAsync("Account was added.");
+                    return;
                 }
                 await Context.Channel.SendMessageAsync("Invalid account name.");
             }

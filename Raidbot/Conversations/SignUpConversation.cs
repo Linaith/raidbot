@@ -84,11 +84,12 @@ namespace Raidbot
         private static string CreateAccountSelectionMessage(ulong userId)
         {
             string sendMessage = "Which account do you want to use for the Raid?\n" +
-                "you can coose one of the registred accounts or another one." +
                 "\nregistered accounts:";
+            int i = 0;
             foreach (string account in UserManagement.GetGuildWars2AccountNames(userId))
             {
-                sendMessage += $"\n\t\t{account}";
+                sendMessage += $"\n\t\t{i}: {account}";
+                i++;
             }
             sendMessage += "\ntype cancel to cancel account selection.";
             return sendMessage;
@@ -115,11 +116,6 @@ namespace Raidbot
                             await UserExtensions.SendMessageAsync(_user, CreateAccountSelectionMessage(_user.Id));
                             _state = State.account;
                         }
-                        else if (UserManagement.GetGuildWars2AccountNames(_user.Id).Count() == 0)
-                        {
-                            await UserExtensions.SendMessageAsync(_user, "Which GuildWars2 Account do you want to use?");
-                            _state = State.account;
-                        }
                         else
                         {
                             AddUser();
@@ -132,14 +128,14 @@ namespace Raidbot
                     }
                     break;
                 case State.account:
-                    if (Regex.IsMatch(message, Constants.ACCOUNT_REGEX))
+                    if (int.TryParse(message, out int i) && !string.IsNullOrEmpty(UserManagement.GetAccountByIndex(_user.Id, i)))
                     {
-                        _usedAccount = message;
+                        _usedAccount = UserManagement.GetAccountByIndex(_user.Id, i);
                         AddUser();
                     }
                     else
                     {
-                        await UserExtensions.SendMessageAsync(_user, "Invalid Account Name, please try again. \nDon't forget the numbers. eg: Account Name.1234");
+                        await UserExtensions.SendMessageAsync(_user, "Invalid numer, please select the account index.");
                     }
                     break;
             }

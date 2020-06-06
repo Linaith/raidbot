@@ -196,7 +196,13 @@ namespace Raidbot
 
         public async Task ManageUser(SocketReaction reaction, IEmote emote)
         {
-            ulong user = reaction.User.Value.Id;
+            ulong userId = reaction.User.Value.Id;
+            if (UserManagement.GetGuildWars2AccountNames(userId).Count() == 0)
+            {
+                await UserExtensions.SendMessageAsync(reaction.User.Value, "No Account found, please add an Account with \"!user add account\" or \"user add api\".");
+                return;
+            }
+
             if (emote.Equals(Constants.FlexEmoji))
             {
                 if (!Program.Conversations.ContainsKey(reaction.User.Value.Username))
@@ -204,22 +210,22 @@ namespace Raidbot
                     Program.Conversations.Add(reaction.User.Value.Username, await SignUpConversation.Create(reaction, this, Availability.Flex));
                 }
             }
-            else if (Users.ContainsKey(user))
+            else if (Users.ContainsKey(userId))
             {
                 if (emote.Equals(Constants.SignOnEmoji))
                 {
-                    if (IsAvailabilityChangeAllowed(user, Availability.Yes))
+                    if (IsAvailabilityChangeAllowed(userId, Availability.Yes))
                     {
-                        Users[user].Availability = Availability.Yes;
+                        Users[userId].Availability = Availability.Yes;
                     }
                 }
                 else if (emote.Equals(Constants.UnsureEmoji))
                 {
-                    Users[user].Availability = Availability.Maybe;
+                    Users[userId].Availability = Availability.Maybe;
                 }
                 else if (emote.Equals(Constants.BackupEmoji))
                 {
-                    Users[user].Availability = Availability.Backup;
+                    Users[userId].Availability = Availability.Backup;
                 }
                 else if (emote.Equals(Constants.SignOffEmoji))
                 {

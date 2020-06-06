@@ -148,6 +148,20 @@ namespace Raidbot
             }
         }
 
+        public static string GetAccountByIndex(ulong userId, int index)
+        {
+            if (_users.ContainsKey(userId))
+            {
+                int i = 0;
+                foreach (string account in _users[userId].GuildWars2Accounts.Keys)
+                {
+                    if (i == index) return account;
+                    i++;
+                }
+            }
+            return string.Empty;
+        }
+
         public static IEnumerable<string> GetGuildWars2AccountNames(ulong userId)
         {
             if (_users.ContainsKey(userId))
