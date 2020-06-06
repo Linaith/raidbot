@@ -348,6 +348,5 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
-/Raidsklave/token.txt
-/Raidsklave/TextFile1.txt
-/Raidsklave/debugtoken.txt
+/Raidbot/token.txt
+/Raidbot/debugtoken.txt
