@@ -199,7 +199,8 @@ namespace Raidbot
             ulong userId = reaction.User.Value.Id;
             if (UserManagement.GetGuildWars2AccountNames(userId).Count() == 0)
             {
-                await UserExtensions.SendMessageAsync(reaction.User.Value, "No Account found, please add an Account with \"!user add account\" or \"user add api\".");
+                await UserExtensions.SendMessageAsync(reaction.User.Value, "No Account found, please add an Account with \"!user add account\" or \"!user add api\"." +
+                    "\nthese commands only work on a server.");
                 return;
             }
 

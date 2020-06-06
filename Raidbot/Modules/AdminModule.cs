@@ -1,10 +1,5 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
-using Raidbot.Conversations;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Raidbot.Modules
@@ -21,7 +16,8 @@ namespace Raidbot.Modules
         {
             string helpMessage = "existing admin commands:\n" +
                 "!admin createrolemessage  -  Creates a message to allow users to pick their raid roles. Using this command again moves the message.\n" +
-                "!admin deleterolemessage  -  Removes the role message and the user roles.";
+                "!admin deleterolemessage  -  Removes the role message and the user roles.\n" +
+                "!admin updateusernames  -  updates all usernames on the server.";
             await ReplyAsync(helpMessage);
         }
 
@@ -40,6 +36,13 @@ namespace Raidbot.Modules
         public async Task DeleteRoleMessageAsync()
         {
             await DiscordRoles.DeleteRoleMessage(Context.Guild);
+        }
+
+        [Command("updateusernames")]
+        [Summary("updates all usernames on the server")]
+        public async Task UpdateUsernamesAsync()
+        {
+            await UserManagement.UpdateAllNamesAsync(Context.Guild);
         }
     }
 }

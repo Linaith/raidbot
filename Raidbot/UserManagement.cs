@@ -123,12 +123,11 @@ namespace Raidbot
             return false;
         }
 
-        public static async Task AddServerAsync(IGuildUser user)
+        public static void AddServer(IGuildUser user)
         {
-            if (_users.ContainsKey(user.Id))
+            if (_users.ContainsKey(user.Id) && !_users[user.Id].Guilds.Contains(user.Guild.Id))
             {
                 _users[user.Id].Guilds.Add(user.Guild.Id);
-                await user.ModifyAsync(p => p.Nickname = _users[user.Id].MainAccount);
             }
         }
 
@@ -140,11 +139,12 @@ namespace Raidbot
             }
         }
 
-        public static async Task ChangeAllNamesAsync(IGuild guild)
+        public static async Task UpdateAllNamesAsync(IGuild guild)
         {
             foreach (IGuildUser user in await guild.GetUsersAsync())
             {
-                await AddServerAsync(user);
+                AddServer(user);
+                await UpdateNameAsync(user);
             }
         }
 
