@@ -19,8 +19,8 @@ namespace Raidbot.Modules
                 "!user remove <AccountName>  -  Removes the account from your user.\n" +
                 "!user change <AccountName>  -  Changes your main account. This affects your discord Name on the Server.\n" +
                 "!user list  -  Lists all your accounts.\n" +
-                "!user update  -  Updates the Username to match the main account." +
-                "*Accounts containing a space caracter have to be placed in quotation marks. e.g.: \n!user change \"Test Account.1234\"*";
+                "!user update  -  Updates the Username to match the main account.\n" +
+                "**Accounts containing a space caracter have to be placed in quotation marks. e.g.: \n!user change \"Test Account.1234\"**";
             await ReplyAsync(helpMessage);
         }
 
