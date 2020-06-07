@@ -152,7 +152,7 @@ namespace Raidbot
         {
             if (_users.ContainsKey(userId))
             {
-                int i = 0;
+                int i = 1;
                 foreach (string account in _users[userId].GuildWars2Accounts.Keys)
                 {
                     if (i == index) return account;

@@ -128,6 +128,7 @@ namespace Raidbot
             if (Parsers.TryParseDateTime(message, out DateTime time))
             {
                 _raid.StartTime = time;
+                _raid.ReminderSent = false;
                 return true;
             }
             else

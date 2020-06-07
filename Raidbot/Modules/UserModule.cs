@@ -17,10 +17,10 @@ namespace Raidbot.Modules
                 "!user add api <ApiKey>  -  Adds an apikey to your user. This is currently only used for account names.\n" +
                 "!user add account <AccountName> -  Adds an account without apikey to your user.\n" +
                 "!user remove <AccountName>  -  Removes the account from your user.\n" +
-                "!user change <AccountNAme>  -  Changes your main account. This affects your discorn Name on the Server.\n" +
+                "!user change <AccountName>  -  Changes your main account. This affects your discord Name on the Server.\n" +
                 "!user list  -  Lists all your accounts.\n" +
                 "!user update  -  Updates the Username to match the main account." +
-                "*Accounts containing a space caracter have to be placed in quatation marks. e.g.: \n!user change \"Test Account.1234\"*";
+                "*Accounts containing a space caracter have to be placed in quotation marks. e.g.: \n!user change \"Test Account.1234\"*";
             await ReplyAsync(helpMessage);
         }
 

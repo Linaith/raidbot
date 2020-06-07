@@ -84,7 +84,7 @@ namespace Raidbot
         {
             string sendMessage = "Which account do you want to use for the Raid?\n" +
                 "\nregistered accounts:";
-            int i = 0;
+            int i = 1;
             foreach (string account in UserManagement.GetGuildWars2AccountNames(userId))
             {
                 sendMessage += $"\n\t\t{i}: {account}";
@@ -117,6 +117,7 @@ namespace Raidbot
                         }
                         else
                         {
+                            _usedAccount = UserManagement.GetGuildWars2AccountNames(_user.Id).FirstOrDefault();
                             AddUser();
                         }
                     }

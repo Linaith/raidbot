@@ -40,9 +40,9 @@ namespace Raidbot
             {new Emoji("♾️"), "w1-7"},
             {new Emoji("🇹"), "Raid Training"},
             {new Emoji("\u203C"), "Fractal Training"},
-            {new Emoji("\uD83D\uDCAF"), "Fractals"},
+            {new Emoji("\uD83D\uDCAF"), "Fractal"},
             {new Emoji("🏴‍☠️"), "Dungeons"},
-            {new Emoji("⚔️"), "StrikeMissions"}
+            {new Emoji("⚔️"), "Strike Missions"}
         };
 
         static DiscordRoles()
