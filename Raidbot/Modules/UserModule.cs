@@ -21,6 +21,7 @@ namespace Raidbot.Modules
                 "!user remove <AccountName>\nRemoves the account from your user.\n\n" +
                 "!user change <AccountName>\nChanges your main account. This affects your discord Name on the Server.\n\n" +
                 "!user list\nLists all your accounts.\n\n" +
+                "!user name [Name]\nAdds your name to the Discord nickname. Deletes it without parameter.\n\n" +
                 "!user update\nUpdates the Username to match the main account.\n\n" +
                 "**Accounts containing a space caracter have to be placed in quotation marks. e.g.: \n!user change \"Test Account.1234\"**";
             await ReplyAsync(helpMessage);
@@ -32,6 +33,7 @@ namespace Raidbot.Modules
         {
             UserManagement.AddServer((IGuildUser)Context.User);
             await UserManagement.ChangeUserName(Context.User.Id, name);
+            await Context.Channel.SendMessageAsync("Name was changed");
         }
 
         [Command("remove")]
