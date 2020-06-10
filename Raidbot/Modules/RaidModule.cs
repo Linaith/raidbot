@@ -39,22 +39,23 @@ namespace Raidbot.Modules
         [Summary("creates a raid")]
         public async Task CreateRaidAsync([Summary("message")] params string[] parameters)
         {
-            bool weekly = false;
+            int frequency = 0;
             bool text = false;
             foreach (string param in parameters)
             {
                 if (param.Equals("text", StringComparison.OrdinalIgnoreCase)) text = true;
-                if (param.Equals("weekly", StringComparison.OrdinalIgnoreCase)) weekly = true;
+                if (frequency == 0 && param.Equals("weekly", StringComparison.OrdinalIgnoreCase)) frequency = 7;
+                if (frequency == 0 && param.Equals("daily", StringComparison.OrdinalIgnoreCase)) frequency = 1;
             }
             if (!Program.Conversations.ContainsKey(Context.User.Username))
             {
                 if (text)
                 {
-                    Program.Conversations.Add(Context.User.Username, await RaidCreateContinuousTextConversation.Create(Context.User, Context.Guild, weekly));
+                    Program.Conversations.Add(Context.User.Username, await RaidCreateContinuousTextConversation.Create(Context.User, Context.Guild, frequency));
                 }
                 else
                 {
-                    Program.Conversations.Add(Context.User.Username, await RaidCreateConversation.Create(Context.User, Context.Guild, weekly));
+                    Program.Conversations.Add(Context.User.Username, await RaidCreateConversation.Create(Context.User, Context.Guild, frequency));
                 }
             }
             await Context.Message.DeleteAsync();

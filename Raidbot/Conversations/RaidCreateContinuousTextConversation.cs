@@ -21,15 +21,15 @@ namespace Raidbot.Conversations
 
         private State _state;
 
-        private RaidCreateContinuousTextConversation(IUser user, IGuild guild, bool weekly = false)
+        private RaidCreateContinuousTextConversation(IUser user, IGuild guild, int frequency)
         {
             _user = user;
-            _raid = new Raid(PlannedRaids.CreateRaidId(), weekly);
+            _raid = new Raid(PlannedRaids.CreateRaidId(), frequency);
             _guild = guild;
             _state = State.creation;
         }
 
-        public static async Task<RaidCreateContinuousTextConversation> Create(IUser user, IGuild guild, bool weekly)
+        public static async Task<RaidCreateContinuousTextConversation> Create(IUser user, IGuild guild, int frequency = 0)
         {
             string sendMessage = $"Raid Setup:\n" +
                 "Please enter the whole raid in one message. Different fields are noticed by line breaks.\n" +
@@ -45,7 +45,7 @@ namespace Raidbot.Conversations
             await UserExtensions.SendMessageAsync(user, sendMessage);
 
             //Create Conversation
-            return new RaidCreateContinuousTextConversation(user, guild, weekly);
+            return new RaidCreateContinuousTextConversation(user, guild, frequency);
         }
 
         public async void ProcessMessage(string message)

@@ -140,10 +140,10 @@ namespace Raidbot
                 {
                     if (raid.StartTime.AddHours(raid.RaidDuration + 1).CompareTo(now) <= 0)
                     {
-                        if (raid.Weekly)
+                        if (raid.Frequency > 0)
                         {
                             raid.Reset();
-                            raid.StartTime = raid.StartTime.AddDays(7);
+                            raid.StartTime = raid.StartTime.AddDays(raid.Frequency);
                             raid.MessageId = await HelperFunctions.Instance().RepostRaidMessage(raid);
                             SaveRaids();
                         }

@@ -79,18 +79,18 @@ namespace Raidbot
 
         public bool ReminderSent { get; set; } = false;
 
-        public bool Weekly { get; set; }
+        public int Frequency { get; set; }
 
         //Roles that cout to the user cap
         private readonly List<Availability> blockingRole = new List<Availability> { Availability.Yes };
 
-        public Raid(string raidId, bool weekly = false)
+        public Raid(string raidId, int frequency = 0)
         {
             Roles = new List<Role>();
             Users = new Dictionary<ulong, User>();
             FlexRoles = new List<User>();
             RaidId = raidId;
-            Weekly = weekly;
+            Frequency = frequency;
         }
 
         public List<string> GetFreeRoles()
@@ -199,8 +199,9 @@ namespace Raidbot
             ulong userId = reaction.User.Value.Id;
             if (UserManagement.GetGuildWars2AccountNames(userId).Count() == 0)
             {
-                await UserExtensions.SendMessageAsync(reaction.User.Value, "No Account found, please add an Account with \"!user add account <AccountName>\" or \"!user add api <ApiKey>\"." +
-                    "\nthese commands only work on a server.");
+                await UserExtensions.SendMessageAsync(reaction.User.Value, "No Account found, please add an Account with \"!user add account <AccountName>\" or \"!user add api <ApiKey>\".\n" +
+                    "The APi key needs account permission. Additional permissions may be required in future.\n" +
+                    "\n**These commands only work on a server.**");
                 return;
             }
 
@@ -361,12 +362,17 @@ namespace Raidbot
             string rolesString = string.Empty;
             foreach (var user in Users)
             {
+                string name = UserManagement.GetName(user.Value.DiscordId);
+                if (string.IsNullOrEmpty(name))
+                {
+                    name = user.Value.Nickname;
+                }
                 //print if the user has the now processed role.
                 if (role.Name.Equals(user.Value.Role, StringComparison.OrdinalIgnoreCase))
                 {
                     if (availability.Equals(user.Value.Availability))
                     {
-                        rolesString += $"\t{user.Value.Nickname} ({user.Value.UsedAccount}) {PrintAvailability(user.Value.Availability)}\n";
+                        rolesString += $"\t{name} ({user.Value.UsedAccount}) {PrintAvailability(user.Value.Availability)}\n";
                         if (blockingRole.Contains(user.Value.Availability))
                         {
                             signedUpUsers++;
@@ -382,9 +388,14 @@ namespace Raidbot
             string flexUsers = string.Empty;
             foreach (User user in FlexRoles)
             {
+                string name = UserManagement.GetName(user.DiscordId);
+                if (string.IsNullOrEmpty(name))
+                {
+                    name = user.Nickname;
+                }
                 if (user.Role.Equals(role.Name, StringComparison.OrdinalIgnoreCase))
                 {
-                    flexUsers += $"\t*{user.Nickname} - flex*\n";
+                    flexUsers += $"\t*{name} - flex*\n";
                 }
             }
             return flexUsers;

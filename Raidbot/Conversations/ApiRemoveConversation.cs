@@ -7,18 +7,16 @@ namespace Raidbot.Conversations
     class ApiRemoveConversation : IConversation
     {
         private readonly IUser _user;
-        private readonly IGuild _guild;
 
-        private ApiRemoveConversation(IUser user, IGuild guild = null)
+        private ApiRemoveConversation(IUser user)
         {
             _user = user;
-            _guild = guild;
         }
 
-        public static async Task<ApiRemoveConversation> Create(IUser user, IGuild guild = null)
+        public static async Task<ApiRemoveConversation> Create(IUser user)
         {
             await UserExtensions.SendMessageAsync(user, CreateApiRemoveMessage(user.Id));
-            return new ApiRemoveConversation(user, guild);
+            return new ApiRemoveConversation(user);
         }
 
         private static string CreateApiRemoveMessage(ulong userId)
@@ -41,7 +39,7 @@ namespace Raidbot.Conversations
                 return;
             }
 
-            if (await UserManagement.RemoveGuildWars2Account(_user.Id, message, _guild.Id))
+            if (await UserManagement.RemoveGuildWars2Account(_user.Id, message))
             {
                 await UserExtensions.SendMessageAsync(_user, $"The account \"{message}\" was removed successfully");
             }

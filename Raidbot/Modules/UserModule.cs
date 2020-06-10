@@ -14,21 +14,31 @@ namespace Raidbot.Modules
         public async Task RaidHelpAsync()
         {
             string helpMessage = "existing user commands:\n" +
-                "!user add api <ApiKey>  -  Adds an apikey to your user. This is currently only used for account names.\n" +
-                "!user add account <AccountName> -  Adds an account without apikey to your user.\n" +
-                "!user remove <AccountName>  -  Removes the account from your user.\n" +
-                "!user change <AccountName>  -  Changes your main account. This affects your discord Name on the Server.\n" +
-                "!user list  -  Lists all your accounts.\n" +
-                "!user update  -  Updates the Username to match the main account.\n" +
+                "!user add api <ApiKey>\n" +
+                "Adds an apikey to your user. This is currently only used for account names.\n" +
+                "The APi key needs account permission. Additional permissions may be required in future.\n\n" +
+                "!user add account <AccountName>\nAdds an account without apikey to your user.\n\n" +
+                "!user remove <AccountName>\nRemoves the account from your user.\n\n" +
+                "!user change <AccountName>\nChanges your main account. This affects your discord Name on the Server.\n\n" +
+                "!user list\nLists all your accounts.\n\n" +
+                "!user update\nUpdates the Username to match the main account.\n\n" +
                 "**Accounts containing a space caracter have to be placed in quotation marks. e.g.: \n!user change \"Test Account.1234\"**";
             await ReplyAsync(helpMessage);
+        }
+
+        [Command("name")]
+        [Summary("change your name")]
+        public async Task ChangeNameAsync(string name = "")
+        {
+            UserManagement.AddServer((IGuildUser)Context.User);
+            await UserManagement.ChangeUserName(Context.User.Id, name);
         }
 
         [Command("remove")]
         [Summary("remove an account")]
         public async Task RemoveApiKeyAsync(string accountName)
         {
-            if (await UserManagement.RemoveGuildWars2Account(Context.User.Id, accountName, Context.Guild?.Id))
+            if (await UserManagement.RemoveGuildWars2Account(Context.User.Id, accountName))
             {
                 await Context.Channel.SendMessageAsync("Account removed successfully.");
             }

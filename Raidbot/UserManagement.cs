@@ -44,6 +44,10 @@ namespace Raidbot
                 else
                 {
                     _users[userId].GuildWars2Accounts.Add(account.Name, apiKey);
+                    if (string.IsNullOrEmpty(_users[userId].MainAccount))
+                    {
+                        await ChangeMainAccount(userId, account.Name);
+                    }
                 }
                 SaveUsers();
             }
@@ -73,6 +77,10 @@ namespace Raidbot
                 else if (!_users[userId].GuildWars2Accounts.ContainsKey(accountName))
                 {
                     _users[userId].GuildWars2Accounts.Add(accountName, string.Empty);
+                    if (string.IsNullOrEmpty(_users[userId].MainAccount))
+                    {
+                        await ChangeMainAccount(userId, accountName);
+                    }
                 }
                 SaveUsers();
             }
@@ -83,23 +91,22 @@ namespace Raidbot
             return true;
         }
 
-        public static async Task<bool> RemoveGuildWars2Account(ulong userId, string accountName, ulong? guildId = null)
+        public static async Task<bool> RemoveGuildWars2Account(ulong userId, string accountName)
         {
             if (_users.ContainsKey(userId))
             {
                 bool result = _users[userId].GuildWars2Accounts.Remove(accountName);
-                if (result && guildId != null)
+                if (_users[userId].MainAccount == accountName && result)
                 {
-                    IGuildUser user = await HelperFunctions.Instance().GetGuildUserByIds((ulong)guildId, userId);
                     if (_users[userId].GuildWars2Accounts.Count > 0)
                     {
-                        await user.ModifyAsync(p => p.Nickname = _users[userId].GuildWars2Accounts.First().Key);
+                        await ChangeMainAccount(userId, _users[userId].GuildWars2Accounts.First().Key);
                     }
                     else
                     {
-                        //TODO: test
-                        await user.ModifyAsync(p => p.Nickname = null);
+                        await ChangeMainAccount(userId, string.Empty);
                     }
+                    await ChangeNickname(userId);
                 }
                 SaveUsers();
                 return result;
@@ -113,11 +120,7 @@ namespace Raidbot
             {
                 _users[userId].MainAccount = accountName;
                 SaveUsers();
-                foreach (ulong guildId in _users[userId].Guilds)
-                {
-                    IGuildUser user = await HelperFunctions.Instance().GetGuildUserByIds(guildId, userId);
-                    await user.ModifyAsync(p => p.Nickname = accountName);
-                }
+                await ChangeNickname(userId);
                 return true;
             }
             return false;
@@ -135,7 +138,7 @@ namespace Raidbot
         {
             if (_users.ContainsKey(user.Id))
             {
-                await user.ModifyAsync(p => p.Nickname = _users[user.Id].MainAccount);
+                await ChangeNickname(user);
             }
         }
 
@@ -190,12 +193,58 @@ namespace Raidbot
             }
         }
 
+        private static async Task ChangeNickname(ulong userId)
+        {
+            if (_users.ContainsKey(userId))
+            {
+                foreach (ulong guildId in _users[userId].Guilds)
+                {
+                    IGuildUser user = await HelperFunctions.Instance().GetGuildUserByIds(guildId, userId);
+                    await ChangeNickname(user);
+                }
+            }
+        }
+
+        private static async Task ChangeNickname(IGuildUser user)
+        {
+            if (_users.ContainsKey(user.Id))
+            {
+                string nickname = _users[user.Id].Name;
+                if (!string.IsNullOrEmpty(nickname) && !string.IsNullOrEmpty(_users[user.Id].MainAccount))
+                {
+                    nickname += $" | ";
+                }
+                nickname += _users[user.Id].MainAccount;
+                await user.ModifyAsync(p => p.Nickname = nickname);
+            }
+        }
+
+        public static async Task ChangeUserName(ulong userId, string name)
+        {
+            if (_users.ContainsKey(userId))
+            {
+                _users[userId].Name = name;
+                await ChangeNickname(userId);
+            }
+        }
+
+        public static string GetName(ulong userId)
+        {
+            if (_users.ContainsKey(userId))
+            {
+                return _users[userId].Name;
+            }
+            return string.Empty;
+        }
+
         private class User
         {
             //AccountName, ApiKey
             public Dictionary<string, string> GuildWars2Accounts { get; set; }
 
             public string MainAccount { get; set; }
+
+            public string Name { get; set; } = string.Empty;
 
             public List<ulong> Guilds { get; set; }
 

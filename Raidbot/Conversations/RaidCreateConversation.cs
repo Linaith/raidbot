@@ -8,25 +8,25 @@ namespace Raidbot
 
     class RaidCreateConversation : IConversation
     {
-        private IUser _user;
+        private readonly IUser _user;
 
         private ITextChannel _channel;
 
-        private Raid _raid;
+        private readonly Raid _raid;
 
-        private IGuild _guild;
+        private readonly IGuild _guild;
 
         private State _state;
 
-        private RaidCreateConversation(IUser user, IGuild guild, bool weekly = false)
+        private RaidCreateConversation(IUser user, IGuild guild, int frequency)
         {
             _user = user;
-            _raid = new Raid(PlannedRaids.CreateRaidId(), weekly);
+            _raid = new Raid(PlannedRaids.CreateRaidId(), frequency);
             _state = State.title;
             _guild = guild;
         }
 
-        public static async Task<RaidCreateConversation> Create(IUser user, IGuild guild, bool weekly = false)
+        public static async Task<RaidCreateConversation> Create(IUser user, IGuild guild, int frequency = 0)
         {
             string sendMessage = "Raid Setup:\n" +
 "You can type \"cancel\" at any point during this process to cancel the raid setup\n\n" +
@@ -34,7 +34,7 @@ namespace Raidbot
             await UserExtensions.SendMessageAsync(user, sendMessage);
 
             //Create Conversation
-            return new RaidCreateConversation(user, guild, weekly);
+            return new RaidCreateConversation(user, guild, frequency);
         }
 
         public async void ProcessMessage(string message)
