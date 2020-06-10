@@ -18,7 +18,7 @@ namespace Raidbot.Modules
         public async Task RaidHelpAsync()
         {
             string helpMessage = "existing raid commands:\n" +
-                "!raid create [text] [weekly]\n" +
+                "!raid create [text] [weekly|daily]\n" +
                 "!raid delete <RaidId>\n" +
                 "!raid end <RaidId> [Logs or message]\n" +
                 "!raid cancel <RaidId> [message]\n" +

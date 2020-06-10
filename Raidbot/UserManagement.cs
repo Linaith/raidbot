@@ -224,6 +224,7 @@ namespace Raidbot
             if (_users.ContainsKey(userId))
             {
                 _users[userId].Name = name;
+                SaveUsers();
                 await ChangeNickname(userId);
             }
         }
