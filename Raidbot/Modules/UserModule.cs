@@ -5,10 +5,18 @@ using System.Threading.Tasks;
 
 namespace Raidbot.Modules
 {
-    [RequireContext(ContextType.Guild)]
     [Group("user")]
     public class UserModule : ModuleBase<SocketCommandContext>
     {
+        [RequireContext(ContextType.DM | ContextType.Group)]
+        [Command]
+        [Summary("explains user commands")]
+        public async Task ServerOnlyAsync(params string[] stuffToIgnore)
+        {
+            string helpMessage = "This command has to be executed on a Server.";
+            await ReplyAsync(helpMessage);
+        }
+
         [Command]
         [Summary("explains user commands")]
         public async Task RaidHelpAsync()

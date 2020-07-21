@@ -84,7 +84,7 @@ namespace Raidbot
         //Roles that cout to the user cap
         private readonly List<Availability> blockingRole = new List<Availability> { Availability.Yes };
 
-        public Raid(string raidId, int frequency = 0)
+        public Raid(string raidId, int frequency)
         {
             Roles = new List<Role>();
             Users = new Dictionary<ulong, User>();

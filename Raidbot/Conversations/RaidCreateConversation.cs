@@ -26,7 +26,7 @@ namespace Raidbot
             _guild = guild;
         }
 
-        public static async Task<RaidCreateConversation> Create(IUser user, IGuild guild, int frequency = 0)
+        public static async Task<RaidCreateConversation> Create(IUser user, IGuild guild, int frequency)
         {
             string sendMessage = "Raid Setup:\n" +
 "You can type \"cancel\" at any point during this process to cancel the raid setup\n\n" +

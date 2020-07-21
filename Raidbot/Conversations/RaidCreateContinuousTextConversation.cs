@@ -29,7 +29,7 @@ namespace Raidbot.Conversations
             _state = State.creation;
         }
 
-        public static async Task<RaidCreateContinuousTextConversation> Create(IUser user, IGuild guild, int frequency = 0)
+        public static async Task<RaidCreateContinuousTextConversation> Create(IUser user, IGuild guild, int frequency)
         {
             string sendMessage = $"Raid Setup:\n" +
                 "Please enter the whole raid in one message. Different fields are noticed by line breaks.\n" +

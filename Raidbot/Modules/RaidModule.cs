@@ -202,7 +202,8 @@ namespace Raidbot.Modules
         }
 
         [Command("move")]
-        public async Task EditChannelAsync(string raidId)
+        //channelName is needed for correct command routing
+        public async Task EditChannelAsync(string raidId, string channelName)
         {
             if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
             {
