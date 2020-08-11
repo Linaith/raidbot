@@ -1,31 +1,31 @@
 ﻿using Discord;
+using Raidbot.Users;
 using System;
 using System.Threading.Tasks;
 
 namespace Raidbot.Conversations
 {
-    class ApiRemoveConversation : IConversation
+    class AccountRemoveConversation : IConversation
     {
         private readonly IUser _user;
+        private readonly ulong _guildId;
 
-        private ApiRemoveConversation(IUser user)
+        private AccountRemoveConversation(IUser user, ulong guildId)
         {
             _user = user;
+            _guildId = guildId;
         }
 
-        public static async Task<ApiRemoveConversation> Create(IUser user)
+        public static async Task<AccountRemoveConversation> Create(IUser user, ulong guildId)
         {
-            await UserExtensions.SendMessageAsync(user, CreateApiRemoveMessage(user.Id));
-            return new ApiRemoveConversation(user);
+            await UserExtensions.SendMessageAsync(user, CreateApiRemoveMessage(user.Id, guildId));
+            return new AccountRemoveConversation(user, guildId);
         }
 
-        private static string CreateApiRemoveMessage(ulong userId)
+        private static string CreateApiRemoveMessage(ulong userId, ulong guildId)
         {
-            string sendMessage = "Which account do you want to rmove?";
-            foreach (string account in UserManagement.GetGuildWars2AccountNames(userId))
-            {
-                sendMessage += $"\n{account}";
-            }
+            string sendMessage = "Which account do you want to remove?";
+            sendMessage += $"\n{UserManagement.GetServer(guildId).GetUser(userId).PrintAccounts()}";
             sendMessage += "\n\ntype cancel to cancel the interaction.";
             return sendMessage;
         }
@@ -39,7 +39,7 @@ namespace Raidbot.Conversations
                 return;
             }
 
-            if (await UserManagement.RemoveGuildWars2Account(_user.Id, message))
+            if (UserManagement.GetServer(_guildId).GetUser(_user.Id).RemoveAccount(message))
             {
                 await UserExtensions.SendMessageAsync(_user, $"The account \"{message}\" was removed successfully");
             }

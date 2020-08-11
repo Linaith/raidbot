@@ -1,5 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
+using Raidbot.Users;
+using System;
 using System.Threading.Tasks;
 
 
@@ -21,11 +23,18 @@ namespace Raidbot.Modules
         [Summary("explains user commands")]
         public async Task RaidHelpAsync()
         {
+            string accountTypes = string.Empty;
+            foreach (string accountType in UserManagement.GetServer(Context.Guild.Id).ListAccountTypes())
+            {
+                if (!string.IsNullOrEmpty(accountTypes))
+                {
+                    accountTypes += ", ";
+                }
+                accountTypes += $"{accountType}";
+            }
             string helpMessage = "existing user commands:\n" +
-                "!user add api <ApiKey>\n" +
-                "Adds an apikey to your user. This is currently only used for account names.\n" +
-                "The APi key needs account permission. Additional permissions may be required in future.\n\n" +
-                "!user add account <AccountName>\nAdds an account without apikey to your user.\n\n" +
+                "!user add <AccountType> <AccountName>\nAdds an account without apikey to your user.\n" +
+                $"Available accountTypes: {accountTypes}\n\n" +
                 "!user remove <AccountName>\nRemoves the account from your user.\n\n" +
                 "!user change <AccountName>\nChanges your main account. This affects your discord Name on the Server.\n\n" +
                 "!user list\nLists all your accounts.\n\n" +
@@ -39,8 +48,8 @@ namespace Raidbot.Modules
         [Summary("change your name")]
         public async Task ChangeNameAsync(string name = "")
         {
-            UserManagement.AddServer((IGuildUser)Context.User);
-            await UserManagement.ChangeUserName(Context.User.Id, name);
+            UserManagement.GetServer(Context.Guild.Id).GetUser(Context.User.Id).Name = name;
+            await UserManagement.UpdateNameAsync((IGuildUser)Context.User);
             await Context.Channel.SendMessageAsync("Name was changed");
         }
 
@@ -48,7 +57,7 @@ namespace Raidbot.Modules
         [Summary("remove an account")]
         public async Task RemoveApiKeyAsync(string accountName)
         {
-            if (await UserManagement.RemoveGuildWars2Account(Context.User.Id, accountName))
+            if (UserManagement.GetServer(Context.Guild.Id).GetUser(Context.User.Id).RemoveAccount(accountName))
             {
                 await Context.Channel.SendMessageAsync("Account removed successfully.");
             }
@@ -62,7 +71,7 @@ namespace Raidbot.Modules
         [Summary("switch main account")]
         public async Task SwitchAccountAsync(string accountName)
         {
-            if (await UserManagement.ChangeMainAccount(Context.User.Id, accountName))
+            if (UserManagement.GetServer(Context.Guild.Id).GetUser(Context.User.Id).SetMainAccount(accountName))
             {
                 await Context.Channel.SendMessageAsync("Main account changed successfully.");
             }
@@ -76,46 +85,26 @@ namespace Raidbot.Modules
         [Summary("list linked accounts")]
         public async Task ListAccountsAsync()
         {
-            string accounts = string.Empty;
-            foreach (string account in UserManagement.GetGuildWars2AccountNames(Context.User.Id))
-            {
-                accounts += $"{account}\n";
-            }
-
-            await Context.Channel.SendMessageAsync(accounts); ;
+            await Context.Channel.SendMessageAsync(UserManagement.GetServer(Context.Guild.Id).GetUser(Context.User.Id).PrintAccounts());
         }
 
         [Command("update")]
         [Summary("list linked accounts")]
         public async Task UpdateAsync()
         {
-            UserManagement.AddServer((IGuildUser)Context.User);
             await UserManagement.UpdateNameAsync((IGuildUser)Context.User);
         }
 
-        [Group("add")]
-        public class RaidEdit : ModuleBase<SocketCommandContext>
+        [Command("add")]
+        [Summary("add an account")]
+        public async Task AddAccountAsync(string accountType, string accountDetails)
         {
-            [Command("api")]
-            [Summary("add an api key")]
-            public async Task AddApiKeyAsync(string apiKey)
+            if (UserManagement.GetServer(Context.Guild.Id).GetUser(Context.User.Id).AddAccount(accountType, accountDetails, out string errorMessage))
             {
-                await UserManagement.AddGuildwars2ApiKey(Context.User.Id, apiKey, Context.Guild?.Id);
-                await Context.Message.DeleteAsync();
-                await Context.Channel.SendMessageAsync("Apikey was added.");
+                await Context.Channel.SendMessageAsync("Account was added.");
+                return;
             }
-
-            [Command("account")]
-            [Summary("add an api key")]
-            public async Task AddAccountAsync(string accountname)
-            {
-                if (await UserManagement.AddGuildwars2Account(Context.User.Id, accountname, Context.Guild?.Id))
-                {
-                    await Context.Channel.SendMessageAsync("Account was added.");
-                    return;
-                }
-                await Context.Channel.SendMessageAsync("Invalid account name.");
-            }
+            await Context.Channel.SendMessageAsync(errorMessage);
         }
     }
 }

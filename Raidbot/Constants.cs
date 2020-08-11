@@ -17,7 +17,6 @@ namespace Raidbot
         public const string SAVEFOLDER = "data";
         public const string ACCOUNT_REGEX = "^[a-zA-z ]{3,27}\\.[0-9]{4}$";
 
-
         /*
         readonly IEmote[] reactions = new IEmote[] { //Emote.Parse("<:warrior_spellbreaker:666957477690081290>"),
                                             //Emote.Parse("<:warrior_berserker:666957477987876904>"),

@@ -32,6 +32,8 @@ namespace Raidbot
 
             _client.UserLeft += HandleUserLeft;
 
+            _client.GuildMemberUpdated += HandleGuildMemberUpdated;
+
             // Here we discover all of the command modules in the entry 
             // assembly and load them. Starting from Discord.NET 2.0, a
             // service provider is required to be passed into the
@@ -109,7 +111,7 @@ namespace Raidbot
                 IGuildUser user = await guild.GetUserAsync(reaction.UserId);
                 if (PlannedRaids.TryFindRaid(guild.Id, message.Channel.Id, message.Id, out Raid raid))
                 {
-                    await raid.ManageUser(reaction, reaction.Emote);
+                    await raid.ManageUser(reaction, reaction.Emote, guild.Id);
                 }
                 if (DiscordRoles.IsRoleMessage(guild.Id, message.Id))
                 {
@@ -149,6 +151,14 @@ namespace Raidbot
         private async Task HandleUserLeft(SocketGuildUser user)
         {
             await Task.Run(() => PlannedRaids.RemoveUserFromAllRaids(user));
+        }
+
+        private async Task HandleGuildMemberUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
+        {
+            if (Users.UserManagement.GetServer(newUser.Guild.Id).GetUser(newUser.Id).DiscordName != newUser.Nickname)
+            {
+                await Users.UserManagement.UpdateNameAsync(newUser);
+            }
         }
 
         public async Task LogAsync(LogMessage logMessage)

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Raidbot.Users;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -80,14 +81,14 @@ namespace Raidbot
             return sendMessage;
         }
 
-        private static string CreateAccountSelectionMessage(ulong userId)
+        private string CreateAccountSelectionMessage(ulong userId)
         {
             string sendMessage = "Which account do you want to use for the Raid?\n" +
                 "\nregistered accounts:";
             int i = 1;
-            foreach (string account in UserManagement.GetGuildWars2AccountNames(userId))
+            foreach (Users.Accounts.Account account in UserManagement.GetServer(_raid.GuildId).GetUser(userId).GetAccounts(_raid.AccountType))
             {
-                sendMessage += $"\n\t\t{i}: {account}";
+                sendMessage += $"\n\t\t{i}: {account.AccountName}";
                 i++;
             }
             sendMessage += "\ntype cancel to cancel account selection.";
@@ -110,14 +111,14 @@ namespace Raidbot
                     if (_raid.CheckRoleAvailability(_user.Id, message, _availability, out string resultMessage))
                     {
                         _role = message;
-                        if (UserManagement.GetGuildWars2AccountNames(_user.Id).Count() > 1)
+                        if (UserManagement.GetServer(_raid.GuildId).GetUser(_user.Id).GetAccounts(_raid.AccountType).Count() > 1)
                         {
                             await UserExtensions.SendMessageAsync(_user, CreateAccountSelectionMessage(_user.Id));
                             _state = State.account;
                         }
                         else
                         {
-                            _usedAccount = UserManagement.GetGuildWars2AccountNames(_user.Id).FirstOrDefault();
+                            _usedAccount = UserManagement.GetServer(_raid.GuildId).GetUser(_user.Id).GetAccounts(_raid.AccountType).FirstOrDefault().AccountName;
                             AddUser();
                         }
                     }
@@ -128,9 +129,9 @@ namespace Raidbot
                     }
                     break;
                 case State.account:
-                    if (int.TryParse(message, out int i) && !string.IsNullOrEmpty(UserManagement.GetAccountByIndex(_user.Id, i)))
+                    if (int.TryParse(message, out int i) && UserManagement.GetServer(_raid.GuildId).GetUser(_user.Id).GetAccounts(_raid.AccountType).Count >= i && i > 0)
                     {
-                        _usedAccount = UserManagement.GetAccountByIndex(_user.Id, i);
+                        _usedAccount = UserManagement.GetServer(_raid.GuildId).GetUser(_user.Id).GetAccounts(_raid.AccountType)[i - 1].AccountName;
                         AddUser();
                     }
                     else

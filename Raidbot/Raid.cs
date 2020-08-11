@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Raidbot.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,6 +44,8 @@ namespace Raidbot
             public int Spots { get; }
             public string Description { get; }
         }
+
+        public string AccountType { get; set; } = "GuildWars2";
 
         public string Title { get; set; }
 
@@ -194,14 +197,13 @@ namespace Raidbot
             return true;
         }
 
-        public async Task ManageUser(SocketReaction reaction, IEmote emote)
+        public async Task ManageUser(SocketReaction reaction, IEmote emote, ulong guildId)
         {
             ulong userId = reaction.User.Value.Id;
-            if (UserManagement.GetGuildWars2AccountNames(userId).Count() == 0)
+            if (UserManagement.GetServer(guildId).GetUser(reaction.UserId).GetAccounts(AccountType).Count() == 0)
             {
-                await UserExtensions.SendMessageAsync(reaction.User.Value, "No Account found, please add an Account with \"!user add account <AccountName>\" or \"!user add api <ApiKey>\".\n" +
-                    "The APi key needs account permission. Additional permissions may be required in future.\n" +
-                    "\n**These commands only work on a server.**");
+                await UserExtensions.SendMessageAsync(reaction.User.Value, $"No Account found, please add an Account with \"!user add {AccountType} <AccountName>\".\n" +
+                    "\n**This command only works on a server.**");
                 return;
             }
 
@@ -362,7 +364,7 @@ namespace Raidbot
             string rolesString = string.Empty;
             foreach (var user in Users)
             {
-                string name = UserManagement.GetName(user.Value.DiscordId);
+                string name = UserManagement.GetServer(GuildId).GetUser(user.Value.DiscordId).Name;
                 if (string.IsNullOrEmpty(name))
                 {
                     name = user.Value.Nickname;
@@ -388,7 +390,7 @@ namespace Raidbot
             string flexUsers = string.Empty;
             foreach (User user in FlexRoles)
             {
-                string name = UserManagement.GetName(user.DiscordId);
+                string name = UserManagement.GetServer(GuildId).GetUser(user.DiscordId).Name;
                 if (string.IsNullOrEmpty(name))
                 {
                     name = user.Nickname;

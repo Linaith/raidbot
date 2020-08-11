@@ -1,31 +1,31 @@
 ﻿using Discord;
+using Raidbot.Users;
 using System;
 using System.Threading.Tasks;
 
 namespace Raidbot.Conversations
 {
-    class ApiSwitchConversation : IConversation
+    class AccountSwitchConversation : IConversation
     {
         private readonly IUser _user;
+        private readonly ulong _guildId;
 
-        private ApiSwitchConversation(IUser user)
+        private AccountSwitchConversation(IUser user, ulong guildId)
         {
             _user = user;
+            _guildId = guildId;
         }
 
-        public static async Task<ApiSwitchConversation> Create(IUser user)
+        public static async Task<AccountSwitchConversation> Create(IUser user, ulong guildId)
         {
-            await UserExtensions.SendMessageAsync(user, CreateApiRemoveMessage(user.Id));
-            return new ApiSwitchConversation(user);
+            await UserExtensions.SendMessageAsync(user, CreateApiRemoveMessage(user.Id, guildId));
+            return new AccountSwitchConversation(user, guildId);
         }
 
-        private static string CreateApiRemoveMessage(ulong userId)
+        private static string CreateApiRemoveMessage(ulong userId, ulong guildId)
         {
             string sendMessage = "Which account should be your main account?";
-            foreach (string account in UserManagement.GetGuildWars2AccountNames(userId))
-            {
-                sendMessage += $"\n{account}";
-            }
+            sendMessage += $"\n{UserManagement.GetServer(guildId).GetUser(userId).PrintAccounts()}";
             sendMessage += "\n\ntype cancel to cancel the interaction.";
             return sendMessage;
         }
@@ -39,7 +39,7 @@ namespace Raidbot.Conversations
                 return;
             }
 
-            if (await UserManagement.ChangeMainAccount(_user.Id, message))
+            if (UserManagement.GetServer(_guildId).GetUser(_user.Id).SetMainAccount(message))
             {
                 await UserExtensions.SendMessageAsync(_user, $"The account \"{message}\" is now your main account");
             }
