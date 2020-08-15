@@ -163,7 +163,7 @@ namespace Raidbot
             _raid.VoiceChat = message;
             if (UserManagement.GetServer(_guild.Id).ListAccountTypes().Count == 1)
             {
-                await UserExtensions.SendMessageAsync(_user, "Enter the roles for raid run (format: [amount]:[Role name]). Type done to finish entering roles:");
+                await UserExtensions.SendMessageAsync(_user, "Enter the roles for raid run (format: [amount]:[Role name]:[Role description]). Type done to finish entering roles:");
                 _state = State.roles;
                 _raid.AccountType = UserManagement.GetServer(_guild.Id).ListAccountTypes().First();
             }

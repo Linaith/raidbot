@@ -22,6 +22,7 @@ namespace Raidbot.Modules
                 "!raid delete <RaidId>\n" +
                 "!raid end <RaidId> [Logs or message]\n" +
                 "!raid cancel <RaidId> [message]\n" +
+                "!raid message <RaidId> [message]\n" +
                 "!raid removeuser <RaidId> <@UserName>\n" +
                 "!raid adduser <RaidId> <@UserName> <role> <usedAccount> [maybe/backup]\n" +
                 "!raid addusers <RaidId> <@UserName> <role> <usedAccount> [<@UserName> <role> <usedAccount>]\n" +
@@ -63,7 +64,7 @@ namespace Raidbot.Modules
 
         [Command("delete")]
         [Summary("deletes a raid")]
-        public async Task DeleteRaidAsync([Summary("The id of the raid")] string raidId)
+        public async Task DeleteRaidAsync([Summary("Id of the raid")] string raidId)
         {
             await PlannedRaids.RemoveRaid(raidId, Context.Guild);
             await Context.Message.DeleteAsync();
@@ -71,14 +72,14 @@ namespace Raidbot.Modules
 
         [Command("end")]
         [Summary("ends a raid")]
-        public async Task EndRaidAsync([Summary("The id of the raid")] string raidId, [Summary("The raid logs")] params string[] logs)
+        public async Task EndRaidAsync([Summary("Id of the raid")] string raidId, [Summary("Message")] params string[] logs)
         {
             await DeleteRaidWithMessage(raidId, logs, "ended");
         }
 
         [Command("cancel")]
         [Summary("cancels a raid")]
-        public async Task CancelRaidAsync([Summary("The id of the raid")] string raidId, [Summary("The raid logs")] params string[] text)
+        public async Task CancelRaidAsync([Summary("Id of the raid")] string raidId, [Summary("Message")] params string[] text)
         {
             await DeleteRaidWithMessage(raidId, text, "was canceled");
         }
@@ -93,9 +94,19 @@ namespace Raidbot.Modules
             await Context.Message.DeleteAsync();
         }
 
+        [Command("message")]
+        [Summary("send message to raid members")]
+        public async Task SendMessageAsync([Summary("Id of the raid")] string raidId, [Summary("Message")] params string[] text)
+        {
+            if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+            {
+                await HelperFunctions.SendMessageToEveryRaidMember(raid, text);
+            }
+        }
+
         [Command("removeuser")]
         [Summary("removes a user from the raid")]
-        public async Task RemoveUserAsync([Summary("The id of the raid")] string raidId, [Summary("The user")] IUser user)
+        public async Task RemoveUserAsync([Summary("Id of the raid")] string raidId, [Summary("The user")] IUser user)
         {
             if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
             {
@@ -108,7 +119,7 @@ namespace Raidbot.Modules
 
         [Command("adduser")]
         [Summary("adds a user to the raid")]
-        public async Task AddUserAsync([Summary("The id of the raid")] string raidId, [Summary("The user")] IGuildUser user, [Summary("The role the user wants to play")] string role, [Summary("The account used to raid")] string usedAccount, [Summary("Availability of the user")] string availability = "")
+        public async Task AddUserAsync([Summary("Id of the raid")] string raidId, [Summary("The user")] IGuildUser user, [Summary("The role the user wants to play")] string role, [Summary("The account used to raid")] string usedAccount, [Summary("Availability of the user")] string availability = "")
         {
             if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
             {
@@ -132,7 +143,7 @@ namespace Raidbot.Modules
 
         [Command("addusers")]
         [Summary("adds a user to the raid")]
-        public async Task AddUsersAsync([Summary("The id of the raid")] string raidId, params string[] users)
+        public async Task AddUsersAsync([Summary("Id of the raid")] string raidId, params string[] users)
         {
             if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
             {
@@ -166,7 +177,7 @@ namespace Raidbot.Modules
 
         [Command("removeexternaluser")]
         [Summary("removes a user from the raid")]
-        public async Task RemoveExternalUserAsync([Summary("The id of the raid")] string raidId, [Summary("The name of the user")] string userName)
+        public async Task RemoveExternalUserAsync([Summary("Id of the raid")] string raidId, [Summary("The name of the user")] string userName)
         {
             if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
             {
@@ -179,7 +190,7 @@ namespace Raidbot.Modules
 
         [Command("addexternaluser")]
         [Summary("adds a user to the raid")]
-        public async Task AddExternalUserAsync([Summary("The id of the raid")] string raidId, [Summary("The name of the user")] string userName, [Summary("The role the user wants to play")] string role, [Summary("Availability of the user")] string availability = "")
+        public async Task AddExternalUserAsync([Summary("Id of the raid")] string raidId, [Summary("The name of the user")] string userName, [Summary("The role the user wants to play")] string role, [Summary("Availability of the user")] string availability = "")
         {
             if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
             {
@@ -230,7 +241,7 @@ namespace Raidbot.Modules
 
         [Command("reset")]
         [Summary("resets and rescedules a raid")]
-        public async Task ResetRaidAsync([Summary("The id of the raid")] string raidId, DateTime date, DateTime time, [Summary("message")] params string[] text)
+        public async Task ResetRaidAsync([Summary("Id of the raid")] string raidId, DateTime date, DateTime time, [Summary("message")] params string[] text)
         {
             if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
             {
@@ -242,14 +253,14 @@ namespace Raidbot.Modules
 
         [Command("reset")]
         [Summary("resets and rescedules a raid")]
-        public async Task ResetRaidAsync([Summary("The id of the raid")] string raidId, [Summary("message")] params string[] text)
+        public async Task ResetRaidAsync([Summary("Id of the raid")] string raidId, [Summary("message")] params string[] text)
         {
             await ResetRaidAsync(raidId, 7, text);
         }
 
         [Command("reset")]
         [Summary("resets and rescedules a raid")]
-        public async Task ResetRaidAsync([Summary("The id of the raid")] string raidId, int delay, [Summary("message")] params string[] text)
+        public async Task ResetRaidAsync([Summary("Id of the raid")] string raidId, int delay, [Summary("message")] params string[] text)
         {
             if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
             {
