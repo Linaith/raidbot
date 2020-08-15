@@ -29,7 +29,7 @@ namespace Raidbot
 
             //send edit Message
             string message = $"You are editing the {edit} of Raid {conversation._raid.RaidId}.\n" +
-                $"write can write cancel to cancel the editing\n" +
+                $"you can write \"cancel\" to cancel the editing\n" +
                 $"the current {edit} is: \n";
             switch (edit)
             {

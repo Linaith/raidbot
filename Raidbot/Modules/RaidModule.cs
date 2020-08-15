@@ -286,7 +286,7 @@ namespace Raidbot.Modules
             public async Task DefaultEditAsync()
             {
                 await ReplyAsync("Usage: !raid edit [what] [raidId]\n" +
-                    "possible Edits: title, description, time, duration, organisator, guild, voicechat");
+                    "possible Edits: title, description, time, duration, organisator, guild, voicechat, role");
             }
 
             // !raid edit title 12345678900
@@ -359,6 +359,25 @@ namespace Raidbot.Modules
                 {
                     await Context.Channel.SendMessageAsync($"raid {raidId} not found");
                 }
+            }
+
+            // !raid edit role 12345678900
+            [Command("role")]
+            public async Task EditRoleAsync(string raidId)
+            {
+                if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+                {
+                    if (!Program.Conversations.ContainsKey(Context.User.Username))
+                    {
+                        IUserMessage userMessage = (IUserMessage)await Context.Guild.GetTextChannel(raid.ChannelId).GetMessageAsync(raid.MessageId);
+                        Program.Conversations.Add(Context.User.Username, await RaidEditRoleConversation.Create(Context.User, raidId, userMessage));
+                    }
+                }
+                else
+                {
+                    await Context.Channel.SendMessageAsync($"raid {raidId} not found");
+                }
+                await Context.Message.DeleteAsync();
             }
         }
     }

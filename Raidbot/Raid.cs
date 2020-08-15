@@ -40,9 +40,9 @@ namespace Raidbot
                 Description = description;
             }
 
-            public string Name { get; }
+            public string Name { get; set; }
             public int Spots { get; }
-            public string Description { get; }
+            public string Description { get; set; }
         }
 
         public string AccountType { get; set; } = "GuildWars2";
