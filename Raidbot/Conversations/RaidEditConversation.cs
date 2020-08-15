@@ -1,8 +1,6 @@
 ﻿using Discord;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Raidbot
@@ -42,11 +40,11 @@ namespace Raidbot
                     message += conversation._raid.RaidDuration;
                     break;
                 case Edits.Time:
-                    message += conversation._raid.StartTime.ToString();
+                    message += conversation._raid.StartTime.ToString() +
+                        $"\nrequired Format: {Constants.DateFormat}";
                     break;
                 case Edits.Title:
-                    message += conversation._raid.Title + "\n";
-                    message += $"required Format: {Constants.DateFormat}";
+                    message += conversation._raid.Title;
                     break;
                 case Edits.Organisator:
                     message += conversation._raid.Organisator;
