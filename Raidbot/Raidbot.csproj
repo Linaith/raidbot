@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Modules\AdminModule.cs~RF807a934.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.2.0" />
     <PackageReference Include="Gw2Sharp" Version="0.10.0" />
   </ItemGroup>

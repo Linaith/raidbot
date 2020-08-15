@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 
 namespace Raidbot
 {
-    enum State { title, description, channel, date, duration, organisator, guild, voicechat, roles }
-
     class RaidCreateConversation : IConversation
     {
+        enum State { title, description, channel, date, duration, organisator, guild, voicechat, roles }
+
         private readonly IUser _user;
 
         private ITextChannel _channel;

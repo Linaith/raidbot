@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Raidbot.Conversations
 {
-    class AccountRemoveConversation : IConversation
+    class AccountAddConversation : IConversation
     {
         enum State { accountType, accountName }
 
@@ -15,7 +15,7 @@ namespace Raidbot.Conversations
         private State _state;
         private string _accountType;
 
-        private AccountRemoveConversation(IUser user, ulong guildId)
+        private AccountAddConversation(IUser user, ulong guildId)
         {
             _user = user;
             _guildId = guildId;
@@ -30,22 +30,22 @@ namespace Raidbot.Conversations
             }
         }
 
-        public static async Task<AccountRemoveConversation> Create(IUser user, ulong guildId)
+        public static async Task<AccountAddConversation> Create(IUser user, ulong guildId)
         {
-            AccountRemoveConversation conversation = new AccountRemoveConversation(user, guildId);
-            await conversation.SendInitialMessage();
+            AccountAddConversation conversation = new AccountAddConversation(user, guildId);
+            await conversation.SendAddAccountMessage();
             return conversation;
         }
 
-        private async Task SendInitialMessage()
+        private async Task SendAddAccountMessage()
         {
             switch (_state)
             {
                 case State.accountType:
-                    await UserExtensions.SendMessageAsync(_user, $"From which account type do you want to remove an account?\n{UserManagement.GetServer(_guildId).GetUser(_user.Id).PrintAccounts()}");
+                    await UserExtensions.SendMessageAsync(_user, $"For which account type do you want an account?\nAvailable account types: {CreateAccountTypeString()}");
                     break;
                 case State.accountName:
-                    await UserExtensions.SendMessageAsync(_user, $"Which {_accountType} account do you want to remove?\n{UserManagement.GetServer(_guildId).GetUser(_user.Id).PrintAccounts()}");
+                    await UserExtensions.SendMessageAsync(_user, $"Which {_accountType} account do you want to add?");
                     break;
             }
         }
@@ -75,7 +75,7 @@ namespace Raidbot.Conversations
             if (UserManagement.GetServer(_guildId).ListAccountTypes().Contains(message))
             {
                 _accountType = message;
-                await UserExtensions.SendMessageAsync(_user, $"Which {_accountType} account do you want to remove?");
+                await UserExtensions.SendMessageAsync(_user, $"Which {_accountType} account do you want to add?");
                 _state = State.accountName;
             }
             else
@@ -88,14 +88,14 @@ namespace Raidbot.Conversations
 
         public async Task ProcessAccountNameAsync(string message)
         {
-            if (UserManagement.GetServer(_guildId).GetUser(_user.Id).RemoveAccount(_accountType, message))
+            if (UserManagement.GetServer(_guildId).GetUser(_user.Id).AddAccount(_accountType, message, out string errorMessage))
             {
-                await UserExtensions.SendMessageAsync(_user, $"Removed the account successfully.\nYour accounts are:\n{UserManagement.GetServer(_guildId).GetUser(_user.Id).PrintAccounts()}");
+                await UserExtensions.SendMessageAsync(_user, $"Added the account successfully.\nYour accounts are:\n{UserManagement.GetServer(_guildId).GetUser(_user.Id).PrintAccounts()}");
                 Program.Conversations.Remove(_user.Username);
             }
             else
             {
-                await UserExtensions.SendMessageAsync(_user, $"Account {message} not found. \n" +
+                await UserExtensions.SendMessageAsync(_user, $"{errorMessage}\n" +
                     "Please try again or type \"cancel\" to cancel the interaction.");
             }
         }

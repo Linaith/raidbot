@@ -78,33 +78,21 @@ namespace Raidbot.Users
             }
         }
 
-        //TODO: choose other account type 
-        public bool RemoveAccount(string accountName)
+        public bool RemoveAccount(string accountType, string accountName)
         {
-            foreach (List<Account> accountList in GameAccounts.Values)
-            {
-                foreach (Account account in accountList)
-                {
-                    if (account.AccountName == accountName)
-                    {
-                        accountList.Remove(account);
-                        if (MainAccount == accountName && accountList.Count > 0)
-                        {
-                            MainAccount = accountList.First().AccountName;
-                        }
-                        UserManagement.SaveUsers();
-                        return true;
-                    }
-                }
-            }
-            return false;
+            if (!GameAccounts.ContainsKey(accountType)) return false;
+
+            int removed = GameAccounts[accountType].RemoveAll(a => a.AccountName == accountName);
+            UserManagement.SaveUsers();
+
+            return removed > 0;
         }
 
         public bool SetMainAccount(string mainAccount)
         {
             foreach (List<Account> accountList in GameAccounts.Values)
             {
-                foreach (var account in accountList.Where(m => m.AccountName == mainAccount))
+                if (accountList.Any(m => m.AccountName == mainAccount))
                 {
                     MainAccount = mainAccount;
                     UserManagement.SaveUsers();

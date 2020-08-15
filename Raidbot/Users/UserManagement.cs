@@ -73,7 +73,7 @@ namespace Raidbot.Users
 
         public static async Task UpdateNameAsync(IGuildUser user)
         {
-            if (_discordServers.ContainsKey(user.GuildId) && _discordServers[user.GuildId].Users.ContainsKey(user.Id))
+            if (_discordServers.ContainsKey(user.GuildId) && _discordServers[user.GuildId].ChangeNames && _discordServers[user.GuildId].Users.ContainsKey(user.Id))
             {
                 string nickname = _discordServers[user.GuildId].GetUser(user.Id).DiscordName;
                 if (!string.IsNullOrEmpty(nickname))

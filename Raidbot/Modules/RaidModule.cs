@@ -209,11 +209,11 @@ namespace Raidbot.Modules
             {
                 foreach (var channel in Context.Message.MentionedChannels)
                 {
-                    if (channel is ITextChannel)
+                    if (channel is ITextChannel textChannel)
                     {
                         IUserMessage userMessage = (IUserMessage)await Context.Guild.GetTextChannel(raid.ChannelId).GetMessageAsync(raid.MessageId);
                         await userMessage.DeleteAsync();
-                        raid.MessageId = await HelperFunctions.PostRaidMessageAsync((ITextChannel)channel, raid);
+                        raid.MessageId = await HelperFunctions.PostRaidMessageAsync(textChannel, raid);
                         raid.ChannelId = channel.Id;
                         await Context.Channel.SendMessageAsync($"raid moved to {channel.Name}");
                         PlannedRaids.UpdateRaid(raidId, raid);

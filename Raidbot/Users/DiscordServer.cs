@@ -1,8 +1,4 @@
-﻿using Raidbot.Users.Accounts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Raidbot.Users
 {
@@ -12,7 +8,9 @@ namespace Raidbot.Users
         //UserId, User
         public Dictionary<ulong, User> Users { get; set; }
 
-        ulong GuildId { get; }
+        public bool ChangeNames { get; set; } = false;
+
+        public ulong GuildId { get; }
 
         public DiscordServer(ulong guildId)
         {
@@ -35,6 +33,13 @@ namespace Raidbot.Users
             if (UsableAccountTypes.Contains(accountType))
             {
                 UsableAccountTypes.Remove(accountType);
+                foreach (User user in Users.Values)
+                {
+                    if (user.GameAccounts.ContainsKey(accountType))
+                    {
+                        user.GameAccounts.Remove(accountType);
+                    }
+                }
                 UserManagement.SaveUsers();
                 return true;
             }

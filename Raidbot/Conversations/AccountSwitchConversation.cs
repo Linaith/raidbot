@@ -42,10 +42,11 @@ namespace Raidbot.Conversations
             if (UserManagement.GetServer(_guildId).GetUser(_user.Id).SetMainAccount(message))
             {
                 await UserExtensions.SendMessageAsync(_user, $"The account \"{message}\" is now your main account");
+                Program.Conversations.Remove(_user.Username);
             }
             else
             {
-                await UserExtensions.SendMessageAsync(_user, $"No Account named \"{message}\" found");
+                await UserExtensions.SendMessageAsync(_user, $"No Account named \"{message}\" found.\nPlease try again or type \"cancel\" to cancel the interaction.");
             }
         }
     }
