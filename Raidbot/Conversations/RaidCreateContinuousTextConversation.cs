@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Raidbot.Users;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -40,6 +41,7 @@ namespace Raidbot.Conversations
                 $"<Organisator>\n" +
                 $"<Guild>\n" +
                 $"<Voice Chat>\n" +
+                $"<Account Type>\n" +
                 $"<Roles> one role per line. format: [amount]:[Role name]:[Role description] \n" +
                 $"<Description> can be multi line";
             await UserExtensions.SendMessageAsync(user, sendMessage);
@@ -99,6 +101,7 @@ namespace Raidbot.Conversations
             if (!await SetOrganisatorAsync(strReader.ReadLine())) return false;
             if (!await SetGuildAsync(strReader.ReadLine())) return false;
             if (!await SetVoiceChatAsync(strReader.ReadLine())) return false;
+            if (!await SetAccountTypeAsync(strReader.ReadLine())) return false;
 
 
             string line = strReader.ReadLine();
@@ -224,6 +227,22 @@ namespace Raidbot.Conversations
                 return false;
             }
             _raid.VoiceChat = message;
+            return true;
+        }
+
+        private async Task<bool> SetAccountTypeAsync(string message)
+        {
+            if (message == null)
+            {
+                await UserExtensions.SendMessageAsync(_user, $"No account type was found.");
+                return false;
+            }
+            if (!UserManagement.GetServer(_guild.Id).ListAccountTypes().Contains(message))
+            {
+                await UserExtensions.SendMessageAsync(_user, "Invalid account type.");
+                return false;
+            }
+            _raid.AccountType = message;
             return true;
         }
     }

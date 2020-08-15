@@ -1,12 +1,14 @@
 ﻿using Discord;
+using Raidbot.Users;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Raidbot
 {
     class RaidCreateConversation : IConversation
     {
-        enum State { title, description, channel, date, duration, organisator, guild, voicechat, roles }
+        enum State { title, description, channel, date, duration, organisator, guild, voicechat, accountType, roles }
 
         private readonly IUser _user;
 
@@ -70,6 +72,9 @@ namespace Raidbot
                     break;
                 case State.voicechat:
                     await ProcessVoiceChatAsync(message);
+                    break;
+                case State.accountType:
+                    await ProcessAccountTypeAsync(message);
                     break;
                 case State.roles:
                     await ProcessRolesAsync(message);
@@ -156,8 +161,33 @@ namespace Raidbot
         public async Task ProcessVoiceChatAsync(string message)
         {
             _raid.VoiceChat = message;
-            await UserExtensions.SendMessageAsync(_user, "Enter the roles for raid run (format: [amount]:[Role name]). Type done to finish entering roles:");
-            _state = State.roles;
+            if (UserManagement.GetServer(_guild.Id).ListAccountTypes().Count == 1)
+            {
+                await UserExtensions.SendMessageAsync(_user, "Enter the roles for raid run (format: [amount]:[Role name]). Type done to finish entering roles:");
+                _state = State.roles;
+                _raid.AccountType = UserManagement.GetServer(_guild.Id).ListAccountTypes().First();
+            }
+            else
+            {
+                await UserExtensions.SendMessageAsync(_user, $"Choose the account type used for the raid. Existing account types: {CreateAccountTypeString()}");
+                _state = State.accountType;
+            }
+        }
+
+        public async Task ProcessAccountTypeAsync(string message)
+        {
+            if (UserManagement.GetServer(_guild.Id).ListAccountTypes().Contains(message))
+            {
+                _raid.AccountType = message;
+                await UserExtensions.SendMessageAsync(_user, "Enter the roles for raid run (format: [amount]:[Role name]). Type done to finish entering roles:");
+                _state = State.roles;
+            }
+            else
+            {
+                await UserExtensions.SendMessageAsync(_user, "Invalid account type. \n" +
+                    "Please try again or type \"cancel\" to cancel the interaction.\n" +
+                    $"Available account types: {CreateAccountTypeString()}");
+            }
         }
 
         public async Task ProcessRolesAsync(string message)
@@ -198,6 +228,20 @@ namespace Raidbot
             {
                 await UserExtensions.SendMessageAsync(_user, invalidFormatMessage);
             }
+        }
+
+        private string CreateAccountTypeString()
+        {
+            string accountTypes = string.Empty;
+            foreach (string accountType in UserManagement.GetServer(_guild.Id).ListAccountTypes())
+            {
+                if (!string.IsNullOrEmpty(accountTypes))
+                {
+                    accountTypes += ", ";
+                }
+                accountTypes += $"{accountType}";
+            }
+            return accountTypes;
         }
     }
 }
