@@ -9,7 +9,7 @@ namespace Raidbot.Users
     {
         public Dictionary<string, List<Account>> GameAccounts { get; }
 
-        public string MainAccount { get; private set; } = string.Empty;
+        public string MainAccount { get; set; } = string.Empty;
 
         public string Name { get; set; } = string.Empty;
 

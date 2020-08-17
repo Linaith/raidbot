@@ -79,7 +79,10 @@ namespace Raidbot.Modules
                     await ReplyAsync($"Names will no longer be managed by the bot.");
                 }
             }
-            await ReplyAsync($"wrong parameter, only \"true\" or \"false\" allowed.");
+            else
+            {
+                await ReplyAsync($"wrong parameter, only \"true\" or \"false\" allowed.");
+            }
         }
     }
 }
