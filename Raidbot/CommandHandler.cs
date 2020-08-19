@@ -1,6 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
+using Raidbot.Services;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -11,12 +13,16 @@ namespace Raidbot
     {
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
+        private readonly IServiceProvider _services;
+        private readonly RoleService _roleService;
 
         // Retrieve client and CommandService instance via ctor
-        public CommandHandler(DiscordSocketClient client, CommandService commands)
+        public CommandHandler(DiscordSocketClient client, CommandService commands, RoleService roleService, IServiceProvider services)
         {
             _commands = commands;
             _client = client;
+            _services = services;
+            _roleService = roleService;
         }
 
         public async Task InstallCommandsAsync()
@@ -34,16 +40,16 @@ namespace Raidbot
 
             _client.GuildMemberUpdated += HandleGuildMemberUpdated;
 
-            // Here we discover all of the command modules in the entry 
-            // assembly and load them. Starting from Discord.NET 2.0, a
-            // service provider is required to be passed into the
-            // module registration method to inject the 
-            // required dependencies.
-            //
-            // If you do not use Dependency Injection, pass null.
-            // See Dependency Injection guide for more information.
+            _client.MessageDeleted += HandleMessageDeleted;
+
+
             await _commands.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
-                                            services: null);
+                                            services: _services);
+        }
+
+        private async Task HandleMessageDeleted(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
+        {
+            _roleService.DeleteMessage(message.Id);
         }
 
         private async Task HandleCommandAsync(SocketMessage messageParam)
@@ -82,7 +88,7 @@ namespace Raidbot
             await _commands.ExecuteAsync(
                 context: context,
                 argPos: argPos,
-                services: null);
+                services: _services);
         }
 
         private bool IsBotMentioned(SocketMessage messageParam, SocketCommandContext context)
@@ -113,9 +119,9 @@ namespace Raidbot
                 {
                     await raid.ManageUser(reaction, reaction.Emote, guild.Id);
                 }
-                if (DiscordRoles.IsRoleMessage(guild.Id, message.Id))
+                if (_roleService.IsRoleMessage(message.Id))
                 {
-                    await DiscordRoles.SetRole(guild, user, reaction.Emote);
+                    await _roleService.SetRole(guild, user, reaction);
                 }
             }
             else if (message.Channel.GetType() == typeof(SocketDMChannel))
@@ -141,9 +147,9 @@ namespace Raidbot
             {
                 IGuild guild = ((SocketGuildChannel)message.Channel).Guild;
                 IGuildUser user = await guild.GetUserAsync(reaction.UserId);
-                if (DiscordRoles.IsRoleMessage(guild.Id, message.Id))
+                if (_roleService.IsRoleMessage(message.Id))
                 {
-                    await DiscordRoles.UnsetRole(guild, user, reaction.Emote);
+                    await _roleService.UnsetRole(guild, user, reaction);
                 }
             }
         }

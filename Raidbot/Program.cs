@@ -1,6 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
+using Raidbot.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +12,6 @@ namespace Raidbot
 {
     class Program
     {
-
         public static void Main()
         => new Program().MainAsync().GetAwaiter().GetResult();
 
@@ -21,9 +22,20 @@ namespace Raidbot
 
         public async Task MainAsync()
         {
+            if (!Directory.Exists(Constants.SAVEFOLDER))
+            {
+                Directory.CreateDirectory(Constants.SAVEFOLDER);
+            }
             _client = new DiscordSocketClient();
-
             _client.Log += Log;
+
+
+            IServiceProvider serviceProvider = new ServiceCollection()
+                .AddSingleton(_client)
+                .AddSingleton<CommandService>()
+                .AddSingleton<CommandHandler>()
+                .AddSingleton<RoleService>()
+                .BuildServiceProvider();
 
 #if DEBUG
             var token = File.ReadAllText("debugtoken.txt");
@@ -33,17 +45,11 @@ namespace Raidbot
 
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
-            Reminder.Start();
 
-            if (!Directory.Exists(Constants.SAVEFOLDER))
-            {
-                Directory.CreateDirectory(Constants.SAVEFOLDER);
-            }
+            await serviceProvider.GetRequiredService<CommandHandler>().InstallCommandsAsync();
 
-            CommandService commandService = new CommandService();
-            CommandHandler commandHandler = new CommandHandler(_client, commandService);
-            await commandHandler.InstallCommandsAsync();
             HelperFunctions.Instance().Init(_client);
+            Reminder.Start();
 
             // Block this task until the program is closed.
             await Task.Delay(-1);

@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+
+<Messages>
+  <GW2Raid>
+    <Role>
+      <Name>Raid</Name>
+      <Icon>&#9745;</Icon>
+    </Role>
+    <Role>
+      <Name>w1</Name>
+      <Icon>&#49;&#8419;</Icon>
+    </Role>
+    <Role>
+      <Name>w2</Name>
+      <Icon>&#50;&#8419;</Icon>
+    </Role>
+    <Role>
+      <Name>w3</Name>
+      <Icon>&#51;&#8419;</Icon>
+    </Role>
+    <Role>
+      <Name>w4</Name>
+      <Icon>&#52;&#8419;</Icon>
+    </Role>
+    <Role>
+      <Name>w5</Name>
+      <Icon>&#53;&#8419;</Icon>
+    </Role>
+    <Role>
+      <Name>w6</Name>
+      <Icon>&#54;&#8419;</Icon>
+    </Role>
+    <Role>
+      <Name>w7</Name>
+      <Icon>&#55;&#8419;</Icon>
+    </Role>
+    <Role>
+      <Name>w1-7</Name>
+      <Icon>♾️</Icon>
+    </Role>
+    <Role>
+      <Name>Raid Training</Name>
+      <Icon>🇹</Icon>
+    </Role>
+    <Role>
+      <Name>Fractal Training</Name>
+      <Icon>&#8252;</Icon>
+    </Role>
+    <Role>
+      <Name>Fractal</Name>
+      <Icon>&#128175;</Icon>
+    </Role>
+    <Role>
+      <Name>Dungeons</Name>
+      <Icon>🏴‍☠️</Icon>
+    </Role>
+    <Role>
+      <Name>Strike Missions</Name>
+      <Icon>⚔️</Icon>
+    </Role>
+  </GW2Raid>
+  <LIEB>
+    <Role>
+      <Name>NSFW</Name>
+      <Icon>&#128683;</Icon>
+    </Role>
+    <Role>
+      <Name>Gildenkeller</Name>
+      <Icon>&#9939;</Icon>
+    </Role>
+    <Role>
+      <Name>Medien</Name>
+      <Icon>&#128247;</Icon>
+    </Role>
+    <Role>
+      <Name>Meme</Name>
+      <Icon>&#128243;</Icon>
+    </Role>
+  </LIEB>
+  <LIEBAnderes>
+    <Role>
+      <Name>New World</Name>
+      <Icon>🌍</Icon>
+    </Role>
+    <Role>
+      <Name>Pen and Paper</Name>
+      <Icon>&#128221;</Icon>
+    </Role>
+    <Role>
+      <Name>Minecraft</Name>
+      <Icon>&#128029;</Icon>
+    </Role>
+    <Role>
+      <Name>Pokemon</Name>
+      <Icon>&#128000;</Icon>
+    </Role>
+    <Role>
+      <Name>Larp</Name>
+      <Icon>🗡️</Icon>
+    </Role>
+    <Role>
+      <Name>DSA Gilde</Name>
+      <Icon>🍺</Icon>
+    </Role>
+    <Role>
+      <Name>Cuthulu</Name>
+      <Icon>🦑</Icon>
+    </Role>
+  </LIEBAnderes>
+</Messages>

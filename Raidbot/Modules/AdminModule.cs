@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Raidbot.Services;
 using Raidbot.Users;
 using System.Threading.Tasks;
 
@@ -11,6 +12,13 @@ namespace Raidbot.Modules
     [Group("admin")]
     public class AdminModule : ModuleBase<SocketCommandContext>
     {
+        private readonly RoleService _roleService;
+
+        public AdminModule(RoleService roleService)
+        {
+            _roleService = roleService;
+        }
+
         [Command]
         [Summary("explains admin commands")]
         public async Task RaidHelpAsync()
@@ -26,19 +34,12 @@ namespace Raidbot.Modules
 
         [Command("createrolemessage")]
         [Summary("creates a role message")]
-        public async Task CreateRoleMessageAsync()
+        public async Task CreateRoleMessageAsync(string messageType)
         {
             if (Context.Channel is ITextChannel channel)
             {
-                await DiscordRoles.PostRoleMessage(channel);
+                await _roleService.PostMessage(channel, messageType);
             }
-        }
-
-        [Command("deleterolemessage")]
-        [Summary("deletes a role message")]
-        public async Task DeleteRoleMessageAsync()
-        {
-            await DiscordRoles.DeleteRoleMessage(Context.Guild);
         }
 
         [Command("addaccounttype")]
