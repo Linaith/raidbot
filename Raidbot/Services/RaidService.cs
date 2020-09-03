@@ -75,6 +75,7 @@ namespace Raidbot.Services
             {
                 RemoveUser(raid.RaidId, user.Id);
             }
+            SaveRaids();
         }
 
         public bool TryFindRaid(string raidId, out Raid raid)
@@ -146,7 +147,7 @@ namespace Raidbot.Services
             {
                 raid.Users.Add(user.DiscordId, user);
             }
-
+            SaveRaids();
             resultMessage = "Added to raid roster";
             return true;
         }
@@ -160,7 +161,9 @@ namespace Raidbot.Services
                 {
                     if (user.Nickname == username && user.DiscordId < 256)
                     {
-                        return RemoveUser(raid.RaidId, user.DiscordId);
+                        string message = RemoveUser(raid.RaidId, user.DiscordId);
+                        SaveRaids();
+                        return message;
                     }
                 }
                 return "user not found";
@@ -184,6 +187,7 @@ namespace Raidbot.Services
                     message = $"Successfully removed {name} from raid {raid.MessageId}";
                 }
                 raid.FlexRoles.RemoveAll(flexRole => flexRole.DiscordId.Equals(userId));
+                SaveRaids();
                 return message;
             }
             else
