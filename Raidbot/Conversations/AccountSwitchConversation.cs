@@ -1,48 +1,36 @@
 ﻿using Discord;
-using Raidbot.Users;
+using Raidbot.Services;
 using System;
 using System.Threading.Tasks;
 
 namespace Raidbot.Conversations
 {
-    class AccountSwitchConversation : IConversation
+    class AccountSwitchConversation : ConversationBase
     {
-        private readonly IUser _user;
         private readonly ulong _guildId;
+        private readonly UserService _userService;
 
-        private AccountSwitchConversation(IUser user, ulong guildId)
+        private AccountSwitchConversation(ConversationService conversationService, UserService userService, IUser user, ulong guildId) : base(conversationService, user)
         {
-            _user = user;
             _guildId = guildId;
+            _userService = userService;
         }
 
-        public static async Task<AccountSwitchConversation> Create(IUser user, ulong guildId)
+        public static async Task<AccountSwitchConversation> Create(ConversationService conversationService, UserService userService, IUser user, ulong guildId)
         {
-            await UserExtensions.SendMessageAsync(user, CreateApiRemoveMessage(user.Id, guildId));
-            return new AccountSwitchConversation(user, guildId);
+            string message = "Which account should be your main account?";
+            message += $"\n{userService.PrintAccounts(guildId, user.Id)}";
+            message += "\n\ntype cancel to cancel the interaction.";
+            await UserExtensions.SendMessageAsync(user, message);
+            return new AccountSwitchConversation(conversationService, userService, user, guildId);
         }
 
-        private static string CreateApiRemoveMessage(ulong userId, ulong guildId)
+        protected override async Task ProcessUncanceledMessage(string message)
         {
-            string sendMessage = "Which account should be your main account?";
-            sendMessage += $"\n{UserManagement.GetServer(guildId).GetUser(userId).PrintAccounts()}";
-            sendMessage += "\n\ntype cancel to cancel the interaction.";
-            return sendMessage;
-        }
-
-        public async void ProcessMessage(string message)
-        {
-            if (message.Equals("cancel", StringComparison.OrdinalIgnoreCase))
-            {
-                await UserExtensions.SendMessageAsync(_user, "interaction canceled");
-                Program.Conversations.Remove(_user.Username);
-                return;
-            }
-
-            if (UserManagement.GetServer(_guildId).GetUser(_user.Id).SetMainAccount(message))
+            if (_userService.SetMainAccount(_guildId, _user.Id, message))
             {
                 await UserExtensions.SendMessageAsync(_user, $"The account \"{message}\" is now your main account");
-                Program.Conversations.Remove(_user.Username);
+                _conversationService.CloseConversation(_user.Id);
             }
             else
             {

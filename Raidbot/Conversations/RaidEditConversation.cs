@@ -1,31 +1,32 @@
 ﻿using Discord;
+using Raidbot.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Raidbot
+namespace Raidbot.Conversations
 {
-    public class RaidEditConversation : IConversation
+    public class RaidEditConversation : ConversationBase
     {
         public enum Edits { Title, Description, Time, Duation, Organisator, Guild, VoiceChat }
 
-        private readonly IUser _user;
         private readonly Raid _raid;
         private readonly Edits _edit;
         private readonly IUserMessage _userMessage;
+        private readonly RaidService _raidService;
 
-        private RaidEditConversation(IUser user, string raidId, Edits edit, IUserMessage userMessage)
+        private RaidEditConversation(ConversationService conversationService, RaidService raidService, IUser user, string raidId, Edits edit, IUserMessage userMessage) : base(conversationService, user)
         {
-            this._user = user;
             this._edit = edit;
             this._userMessage = userMessage;
-            if (!PlannedRaids.TryFindRaid(raidId, out _raid)) throw new KeyNotFoundException("The raid for this message was not found!"); ;
+            _raidService = raidService;
+            if (!_raidService.TryFindRaid(raidId, out _raid)) throw new KeyNotFoundException("The raid for this message was not found!"); ;
         }
 
-        public static async Task<RaidEditConversation> Create(IUser user, string raidId, Edits edit, IUserMessage userMessage)
+        public static async Task<RaidEditConversation> Create(ConversationService conversationService, RaidService raidService, IUser user, string raidId, Edits edit, IUserMessage userMessage)
         {
             //Create Conversation
-            RaidEditConversation conversation = new RaidEditConversation(user, raidId, edit, userMessage);
+            RaidEditConversation conversation = new RaidEditConversation(conversationService, raidService, user, raidId, edit, userMessage);
 
             //send edit Message
             string message = $"You are editing the {edit} of Raid {conversation._raid.RaidId}.\n" +
@@ -61,15 +62,8 @@ namespace Raidbot
             return conversation;
         }
 
-        public async void ProcessMessage(string message)
+        protected override async Task ProcessUncanceledMessage(string message)
         {
-            if (message.Equals("cancel", StringComparison.OrdinalIgnoreCase))
-            {
-                await UserExtensions.SendMessageAsync(_user, "interaction canceled");
-                Program.Conversations.Remove(_user.Username);
-                return;
-            }
-
             switch (_edit)
             {
                 case Edits.Description:
@@ -102,8 +96,8 @@ namespace Raidbot
             catch { }
             finally
             {
-                Program.Conversations.Remove(_user.Username);
-                PlannedRaids.UpdateRaid(_raid.RaidId, _raid);
+                _conversationService.CloseConversation(_user.Id);
+                _raidService.UpdateRaid(_raid.RaidId, _raid);
             }
         }
 

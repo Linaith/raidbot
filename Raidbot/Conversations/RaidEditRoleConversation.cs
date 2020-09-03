@@ -1,5 +1,5 @@
 ﻿using Discord;
-using Raidbot.Users;
+using Raidbot.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,27 +7,27 @@ using System.Threading.Tasks;
 
 namespace Raidbot.Conversations
 {
-    class RaidEditRoleConversation : IConversation
+    class RaidEditRoleConversation : ConversationBase
     {
         enum State { Role, Name, Description }
 
-        private readonly IUser _user;
         private readonly Raid _raid;
         private readonly IUserMessage _userMessage;
         private State _state;
         private string _role;
+        private readonly RaidService _raidService;
 
-        private RaidEditRoleConversation(IUser user, string raidId, IUserMessage userMessage)
+        private RaidEditRoleConversation(ConversationService conversationService, RaidService raidService, IUser user, string raidId, IUserMessage userMessage) : base(conversationService, user)
         {
-            this._user = user;
             this._state = State.Role;
             this._userMessage = userMessage;
-            if (!PlannedRaids.TryFindRaid(raidId, out _raid)) throw new KeyNotFoundException("The raid for this message was not found!"); ;
+            _raidService = raidService;
+            if (!_raidService.TryFindRaid(raidId, out _raid)) throw new KeyNotFoundException("The raid for this message was not found!"); ;
         }
 
-        public static async Task<RaidEditRoleConversation> Create(IUser user, string raidId, IUserMessage userMessage)
+        public static async Task<RaidEditRoleConversation> Create(ConversationService conversationService, RaidService raidService, IUser user, string raidId, IUserMessage userMessage)
         {
-            RaidEditRoleConversation conversation = new RaidEditRoleConversation(user, raidId, userMessage);
+            RaidEditRoleConversation conversation = new RaidEditRoleConversation(conversationService, raidService, user, raidId, userMessage);
             await conversation.SendAddAccountMessage();
             return conversation;
         }
@@ -40,15 +40,8 @@ namespace Raidbot.Conversations
             await UserExtensions.SendMessageAsync(_user, sendMessage);
         }
 
-        public async void ProcessMessage(string message)
+        protected override async Task ProcessUncanceledMessage(string message)
         {
-            if (message.Equals("cancel", StringComparison.OrdinalIgnoreCase))
-            {
-                await UserExtensions.SendMessageAsync(_user, "interaction canceled");
-                Program.Conversations.Remove(_user.Username);
-                return;
-            }
-
             switch (_state)
             {
                 case State.Role:
@@ -108,8 +101,8 @@ namespace Raidbot.Conversations
             catch { }
             finally
             {
-                Program.Conversations.Remove(_user.Username);
-                PlannedRaids.UpdateRaid(_raid.RaidId, _raid);
+                _conversationService.CloseConversation(_user.Id);
+                _raidService.UpdateRaid(_raid.RaidId, _raid);
             }
         }
 

@@ -1,28 +1,27 @@
 ﻿using Discord;
-using Raidbot.Users;
-using System;
+using Raidbot.Services;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Raidbot.Conversations
 {
-    class AccountAddConversation : IConversation
+    class AccountAddConversation : ConversationBase
     {
         enum State { accountType, accountName }
 
-        private readonly IUser _user;
         private readonly ulong _guildId;
         private State _state;
         private string _accountType;
+        private readonly UserService _userService;
 
-        private AccountAddConversation(IUser user, ulong guildId)
+        private AccountAddConversation(ConversationService conversationService, UserService userService, IUser user, ulong guildId) : base(conversationService, user)
         {
-            _user = user;
             _guildId = guildId;
-            if (UserManagement.GetServer(guildId).ListAccountTypes().Count == 1)
+            _userService = userService;
+            if (_userService.ListAccountTypes(guildId).Count == 1)
             {
                 _state = State.accountName;
-                _accountType = UserManagement.GetServer(guildId).ListAccountTypes().First();
+                _accountType = _userService.ListAccountTypes(guildId).First();
             }
             else
             {
@@ -30,9 +29,9 @@ namespace Raidbot.Conversations
             }
         }
 
-        public static async Task<AccountAddConversation> Create(IUser user, ulong guildId)
+        public static async Task<AccountAddConversation> Create(ConversationService conversationService, UserService userService, IUser user, ulong guildId)
         {
-            AccountAddConversation conversation = new AccountAddConversation(user, guildId);
+            AccountAddConversation conversation = new AccountAddConversation(conversationService, userService, user, guildId);
             await conversation.SendAddAccountMessage();
             return conversation;
         }
@@ -50,15 +49,8 @@ namespace Raidbot.Conversations
             }
         }
 
-        public async void ProcessMessage(string message)
+        protected override async Task ProcessUncanceledMessage(string message)
         {
-            if (message.Equals("cancel", StringComparison.OrdinalIgnoreCase))
-            {
-                await UserExtensions.SendMessageAsync(_user, "interaction canceled");
-                Program.Conversations.Remove(_user.Username);
-                return;
-            }
-
             switch (_state)
             {
                 case State.accountType:
@@ -72,7 +64,7 @@ namespace Raidbot.Conversations
 
         public async Task ProcessAccountTypeAsync(string message)
         {
-            if (UserManagement.GetServer(_guildId).ListAccountTypes().Contains(message))
+            if (_userService.ListAccountTypes(_guildId).Contains(message))
             {
                 _accountType = message;
                 await UserExtensions.SendMessageAsync(_user, $"Which {_accountType} account do you want to add?");
@@ -88,10 +80,10 @@ namespace Raidbot.Conversations
 
         public async Task ProcessAccountNameAsync(string message)
         {
-            if (UserManagement.GetServer(_guildId).GetUser(_user.Id).AddAccount(_accountType, message, out string errorMessage))
+            if (_userService.AddAccount(_guildId, _user.Id, _accountType, message, out string errorMessage))
             {
-                await UserExtensions.SendMessageAsync(_user, $"Added the account successfully.\nYour accounts are:\n{UserManagement.GetServer(_guildId).GetUser(_user.Id).PrintAccounts()}");
-                Program.Conversations.Remove(_user.Username);
+                await UserExtensions.SendMessageAsync(_user, $"Added the account successfully.\nYour accounts are:\n{_userService.PrintAccounts(_guildId, _user.Id)}");
+                _conversationService.CloseConversation(_user.Id);
             }
             else
             {
@@ -103,7 +95,7 @@ namespace Raidbot.Conversations
         private string CreateAccountTypeString()
         {
             string accountTypes = string.Empty;
-            foreach (string accountType in UserManagement.GetServer(_guildId).ListAccountTypes())
+            foreach (string accountType in _userService.ListAccountTypes(_guildId))
             {
                 if (!string.IsNullOrEmpty(accountTypes))
                 {

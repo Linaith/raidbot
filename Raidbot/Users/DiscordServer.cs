@@ -18,54 +18,5 @@ namespace Raidbot.Users
             Users = new Dictionary<ulong, User>();
             GuildId = guildId;
         }
-
-        public void AddAccountType(string accountType)
-        {
-            if (!UsableAccountTypes.Contains(accountType))
-            {
-                UsableAccountTypes.Add(accountType);
-                UserManagement.SaveUsers();
-            }
-        }
-
-        public bool RemoveAccountType(string accountType)
-        {
-            if (UsableAccountTypes.Contains(accountType))
-            {
-                UsableAccountTypes.Remove(accountType);
-                foreach (User user in Users.Values)
-                {
-                    if (user.GameAccounts.ContainsKey(accountType))
-                    {
-                        user.GameAccounts.Remove(accountType);
-                    }
-                }
-                UserManagement.SaveUsers();
-                return true;
-            }
-            return false;
-        }
-
-        public List<string> ListAccountTypes()
-        {
-            return UsableAccountTypes;
-        }
-
-        public void RemoveUser(ulong userId)
-        {
-            Users.Remove(userId);
-            UserManagement.SaveUsers();
-        }
-
-        public User GetUser(ulong userId)
-        {
-            if (!Users.ContainsKey(userId))
-            {
-                User newUser = new User(GuildId);
-                Users.Add(userId, newUser);
-                UserManagement.SaveUsers();
-            }
-            return Users[userId];
-        }
     }
 }

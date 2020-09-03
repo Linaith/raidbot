@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
 using Raidbot.Services;
 using System;
 using System.Reflection;
@@ -15,14 +14,20 @@ namespace Raidbot
         private readonly CommandService _commands;
         private readonly IServiceProvider _services;
         private readonly RoleService _roleService;
+        private readonly RaidService _raidService;
+        private readonly ConversationService _conversationService;
+        private readonly UserService _userService;
 
         // Retrieve client and CommandService instance via ctor
-        public CommandHandler(DiscordSocketClient client, CommandService commands, RoleService roleService, IServiceProvider services)
+        public CommandHandler(DiscordSocketClient client, CommandService commands, RoleService roleService, RaidService raidService, ConversationService conversationService, UserService userService, IServiceProvider services)
         {
             _commands = commands;
             _client = client;
             _services = services;
             _roleService = roleService;
+            _raidService = raidService;
+            _conversationService = conversationService;
+            _userService = userService;
         }
 
         public async Task InstallCommandsAsync()
@@ -64,9 +69,9 @@ namespace Raidbot
             var context = new SocketCommandContext(_client, message);
 
             //Process MEssage for open conversation, if it is written in a private chat
-            if (Program.Conversations.ContainsKey(context.User.Username) && context.IsPrivate)
+            if (_conversationService.UserHasConversation(context.User.Id) && context.IsPrivate)
             {
-                Program.Conversations[context.User.Username].ProcessMessage(message.Content);
+                _conversationService.ProcessMessage(context.User.Id, message.Content);
             }
 
             if (IsBotMentioned(messageParam, context))
@@ -115,9 +120,9 @@ namespace Raidbot
             {
                 IGuild guild = ((SocketGuildChannel)message.Channel).Guild;
                 IGuildUser user = await guild.GetUserAsync(reaction.UserId);
-                if (PlannedRaids.TryFindRaid(guild.Id, message.Channel.Id, message.Id, out Raid raid))
+                if (_raidService.TryFindRaid(guild.Id, message.Channel.Id, message.Id, out Raid raid))
                 {
-                    await raid.ManageUser(reaction, reaction.Emote, guild.Id);
+                    await _raidService.HandleReaction(reaction, guild.Id, raid.RaidId);
                 }
                 if (_roleService.IsRoleMessage(message.Id))
                 {
@@ -127,9 +132,9 @@ namespace Raidbot
             else if (message.Channel.GetType() == typeof(SocketDMChannel))
             {
                 //if it is a private message and contains an embed its probably a raid review
-                if (message.Embeds.Count > 0 && Program.Conversations.ContainsKey(reaction.User.Value.Username))
+                if (message.Embeds.Count > 0 && _conversationService.UserHasConversation(reaction.User.Value.Id))
                 {
-                    Program.Conversations[reaction.User.Value.Username].ProcessMessage(reaction.Emote.Name);
+                    _conversationService.ProcessMessage(reaction.User.Value.Id, reaction.Emote.Name);
                 }
             }
             // UserExtensions.SendMessageAsync(reaction.User.Value, reaction.Emote.ToString());//echo emote
@@ -156,14 +161,14 @@ namespace Raidbot
 
         private async Task HandleUserLeft(SocketGuildUser user)
         {
-            await Task.Run(() => PlannedRaids.RemoveUserFromAllRaids(user));
+            await Task.Run(() => _raidService.RemoveUserFromAllRaids(user));
         }
 
         private async Task HandleGuildMemberUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
         {
-            if (Users.UserManagement.GetServer(newUser.Guild.Id).GetUser(newUser.Id).DiscordName != newUser.Nickname)
+            if (_userService.GetDiscordName(newUser.Guild.Id, newUser.Id) != newUser.Nickname)
             {
-                await Users.UserManagement.UpdateNameAsync(newUser);
+                await _userService.UpdateNameAsync(newUser);
             }
         }
 

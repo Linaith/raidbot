@@ -1,39 +1,43 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Raidbot.Users;
+using Raidbot.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using static Raidbot.Raid;
 
-namespace Raidbot
+namespace Raidbot.Conversations
 {
-    class SignUpConversation : IConversation
+    class SignUpConversation : ConversationBase
     {
         enum State { role, account }
-        private readonly IGuildUser _user;
+        private new readonly IGuildUser _user;
         private readonly ISocketMessageChannel _channel;
         private readonly Raid _raid;
         private readonly Raid.Availability _availability;
         private string _role;
         private string _usedAccount;
         private State _state;
+        private readonly RaidService _raidService;
+        private readonly UserService _userService;
 
-        private SignUpConversation(ISocketMessageChannel channel, IGuildUser user, Raid raid, Raid.Availability availability)
+        private SignUpConversation(ConversationService conversationService, RaidService raidService, UserService userService, ISocketMessageChannel channel, IGuildUser user, Raid raid, Raid.Availability availability) : base(conversationService, user)
         {
             _user = user;
             _channel = channel;
             this._raid = raid;
             this._availability = availability;
+            _raidService = raidService;
+            _userService = userService;
             _state = State.role;
         }
 
-        public static async Task<SignUpConversation> Create(SocketReaction reaction, Raid raid, Raid.Availability availability)
+        public static async Task<SignUpConversation> Create(ConversationService conversationService, RaidService raidService, UserService userService, SocketReaction reaction, Raid raid, Raid.Availability availability)
         {
             if (reaction.User.Value is IGuildUser user)
             {
                 //Create Conversation
-                SignUpConversation conversation = new SignUpConversation(reaction.Channel, user, raid, availability);
+                SignUpConversation conversation = new SignUpConversation(conversationService, raidService, userService, reaction.Channel, user, raid, availability);
 
                 //remiove reaction
                 IUserMessage userMessage = (IUserMessage)await conversation._channel.GetMessageAsync(conversation._raid.MessageId);
@@ -81,12 +85,12 @@ namespace Raidbot
             return sendMessage;
         }
 
-        private string CreateAccountSelectionMessage(ulong userId)
+        private string CreateAccountSelectionMessage()
         {
             string sendMessage = "Which account do you want to use for the Raid?\n" +
                 "\nregistered accounts:";
             int i = 1;
-            foreach (Users.Accounts.Account account in UserManagement.GetServer(_raid.GuildId).GetUser(userId).GetAccounts(_raid.AccountType))
+            foreach (Users.Accounts.Account account in _userService.GetAccounts(_raid.GuildId, _user.Id, _raid.AccountType))
             {
                 sendMessage += $"\n\t\t{i}: {account.AccountName}";
                 i++;
@@ -96,29 +100,23 @@ namespace Raidbot
         }
 
         //case insensitive
-        public async void ProcessMessage(string message)
+        protected override async Task ProcessUncanceledMessage(string message)
         {
-            if (message.Equals("cancel", StringComparison.OrdinalIgnoreCase))
-            {
-                await UserExtensions.SendMessageAsync(_user, "interaction canceled");
-                Program.Conversations.Remove(_user.Username);
-                return;
-            }
-
             switch (_state)
             {
                 case State.role:
                     if (_raid.CheckRoleAvailability(_user.Id, message, _availability, out string resultMessage))
                     {
                         _role = message;
-                        if (UserManagement.GetServer(_raid.GuildId).GetUser(_user.Id).GetAccounts(_raid.AccountType).Count() > 1)
+
+                        if (_userService.GetAccounts(_raid.GuildId, _user.Id, _raid.AccountType).Count() > 1)
                         {
-                            await UserExtensions.SendMessageAsync(_user, CreateAccountSelectionMessage(_user.Id));
+                            await UserExtensions.SendMessageAsync(_user, CreateAccountSelectionMessage());
                             _state = State.account;
                         }
                         else
                         {
-                            _usedAccount = UserManagement.GetServer(_raid.GuildId).GetUser(_user.Id).GetAccounts(_raid.AccountType).FirstOrDefault().AccountName;
+                            _usedAccount = _userService.GetAccounts(_raid.GuildId, _user.Id, _raid.AccountType).FirstOrDefault().AccountName;
                             AddUser();
                         }
                     }
@@ -129,9 +127,9 @@ namespace Raidbot
                     }
                     break;
                 case State.account:
-                    if (int.TryParse(message, out int i) && UserManagement.GetServer(_raid.GuildId).GetUser(_user.Id).GetAccounts(_raid.AccountType).Count >= i && i > 0)
+                    if (int.TryParse(message, out int i) && _userService.GetAccounts(_raid.GuildId, _user.Id, _raid.AccountType).Count >= i && i > 0)
                     {
-                        _usedAccount = UserManagement.GetServer(_raid.GuildId).GetUser(_user.Id).GetAccounts(_raid.AccountType)[i - 1].AccountName;
+                        _usedAccount = _userService.GetAccounts(_raid.GuildId, _user.Id, _raid.AccountType)[i - 1].AccountName;
                         AddUser();
                     }
                     else
@@ -145,7 +143,7 @@ namespace Raidbot
         private async void AddUser()
         {
 
-            if (_raid.AddUser(_user, _role, _availability, _usedAccount, out string resultMessage))
+            if (_raidService.AddUser(_raid.RaidId, _user, _role, _availability, _usedAccount, out string resultMessage))
             {
                 try
                 {
@@ -156,7 +154,7 @@ namespace Raidbot
                 catch { }
                 finally
                 {
-                    Program.Conversations.Remove(_user.Username);
+                    _conversationService.CloseConversation(_user.Id);
                 }
             }
             else

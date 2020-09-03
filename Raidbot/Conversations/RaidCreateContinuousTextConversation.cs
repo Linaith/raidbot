@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Raidbot.Services;
 using Raidbot.Users;
 using System;
 using System.Collections.Generic;
@@ -8,11 +9,9 @@ using System.Threading.Tasks;
 
 namespace Raidbot.Conversations
 {
-    public class RaidCreateContinuousTextConversation : IConversation
+    public class RaidCreateContinuousTextConversation : ConversationBase
     {
         enum State { creation, acception }
-
-        private readonly IUser _user;
 
         private ITextChannel _channel;
 
@@ -22,15 +21,20 @@ namespace Raidbot.Conversations
 
         private State _state;
 
-        private RaidCreateContinuousTextConversation(IUser user, IGuild guild, int frequency)
+        private readonly RaidService _raidService;
+
+        private readonly UserService _userService;
+
+        private RaidCreateContinuousTextConversation(ConversationService conversationService, RaidService raidService, UserService userService, IUser user, IGuild guild, int frequency) : base(conversationService, user)
         {
-            _user = user;
-            _raid = new Raid(PlannedRaids.CreateRaidId(), frequency);
+            _raid = new Raid(raidService.CreateRaidId(), frequency);
             _guild = guild;
             _state = State.creation;
+            _raidService = raidService;
+            _userService = userService;
         }
 
-        public static async Task<RaidCreateContinuousTextConversation> Create(IUser user, IGuild guild, int frequency)
+        public static async Task<RaidCreateContinuousTextConversation> Create(ConversationService conversationService, RaidService raidService, UserService userService, IUser user, IGuild guild, int frequency)
         {
             string sendMessage = $"Raid Setup:\n" +
                 "Please enter the whole raid in one message. Different fields are noticed by line breaks.\n" +
@@ -47,17 +51,11 @@ namespace Raidbot.Conversations
             await UserExtensions.SendMessageAsync(user, sendMessage);
 
             //Create Conversation
-            return new RaidCreateContinuousTextConversation(user, guild, frequency);
+            return new RaidCreateContinuousTextConversation(conversationService, raidService, userService, user, guild, frequency);
         }
 
-        public async void ProcessMessage(string message)
+        protected override async Task ProcessUncanceledMessage(string message)
         {
-            if (message.Equals("cancel", StringComparison.OrdinalIgnoreCase))
-            {
-                await UserExtensions.SendMessageAsync(_user, "interaction canceled");
-                Program.Conversations.Remove(_user.Username);
-                return;
-            }
             switch (_state)
             {
                 case State.creation:
@@ -72,21 +70,21 @@ namespace Raidbot.Conversations
                     else
                     {
                         await UserExtensions.SendMessageAsync(_user, $"Creation of the raid failed.");
-                        Program.Conversations.Remove(_user.Username);
+                        _conversationService.CloseConversation(_user.Id);
                     }
                     break;
                 case State.acception:
                     if (message.Equals(Constants.SignOnEmoji.Name))
                     {
                         ulong raidId = await HelperFunctions.PostRaidMessageAsync(_channel, _raid);
-                        PlannedRaids.AddRaid(_raid, _guild.Id, _channel.Id, raidId);
+                        _raidService.AddRaid(_raid, _guild.Id, _channel.Id, raidId);
                         await UserExtensions.SendMessageAsync(_user, "Created the raid successfully.");
                     }
                     else
                     {
                         await UserExtensions.SendMessageAsync(_user, $"Creation of the raid canceled.");
                     }
-                    Program.Conversations.Remove(_user.Username);
+                    _conversationService.CloseConversation(_user.Id);
                     break;
             }
         }
@@ -237,7 +235,7 @@ namespace Raidbot.Conversations
                 await UserExtensions.SendMessageAsync(_user, $"No account type was found.");
                 return false;
             }
-            if (!UserManagement.GetServer(_guild.Id).ListAccountTypes().Contains(message))
+            if (!_userService.ListAccountTypes(_guild.Id).Contains(message))
             {
                 await UserExtensions.SendMessageAsync(_user, "Invalid account type.");
                 return false;

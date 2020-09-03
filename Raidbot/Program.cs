@@ -16,9 +16,6 @@ namespace Raidbot
         => new Program().MainAsync().GetAwaiter().GetResult();
 
         private DiscordSocketClient _client;
-        //public static List<Raid> PlannedRaids = new List<Raid>();
-        //user, conversation
-        public static Dictionary<string, IConversation> Conversations = new Dictionary<string, IConversation>();
 
         public async Task MainAsync()
         {
@@ -35,6 +32,10 @@ namespace Raidbot
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandler>()
                 .AddSingleton<RoleService>()
+                .AddSingleton<UserService>()
+                .AddSingleton<ConversationService>()
+                .AddSingleton<TimerService>()
+                .AddSingleton<RaidService>()
                 .BuildServiceProvider();
 
 #if DEBUG
@@ -49,7 +50,6 @@ namespace Raidbot
             await serviceProvider.GetRequiredService<CommandHandler>().InstallCommandsAsync();
 
             HelperFunctions.Instance().Init(_client);
-            Reminder.Start();
 
             // Block this task until the program is closed.
             await Task.Delay(-1);

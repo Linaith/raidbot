@@ -13,10 +13,12 @@ namespace Raidbot.Modules
     public class AdminModule : ModuleBase<SocketCommandContext>
     {
         private readonly RoleService _roleService;
+        private readonly UserService _userService;
 
-        public AdminModule(RoleService roleService)
+        public AdminModule(RoleService roleService, UserService userService)
         {
             _roleService = roleService;
+            _userService = userService;
         }
 
         [Command]
@@ -46,7 +48,7 @@ namespace Raidbot.Modules
         [Summary("adds a new account type to the Server")]
         public async Task AddAccountTypeAsync(string accountType)
         {
-            UserManagement.AddAccountType(Context.Guild.Id, accountType);
+            _userService.AddAccountType(Context.Guild.Id, accountType);
             await ReplyAsync($"added account type: {accountType}");
         }
 
@@ -54,7 +56,7 @@ namespace Raidbot.Modules
         [Summary("removes an account type from the server")]
         public async Task RemoveAccountTypeAsync(string accountType)
         {
-            if (UserManagement.RemoveAccountType(Context.Guild.Id, accountType))
+            if (_userService.RemoveAccountType(Context.Guild.Id, accountType))
             {
                 await ReplyAsync($"removed account type: {accountType}");
             }
@@ -70,7 +72,7 @@ namespace Raidbot.Modules
         {
             if (bool.TryParse(changeName, out bool change))
             {
-                UserManagement.GetServer(Context.Guild.Id).ChangeNames = change;
+                _userService.GetServer(Context.Guild.Id).ChangeNames = change;
                 if (change)
                 {
                     await ReplyAsync($"Names will now be managed by the bot.");

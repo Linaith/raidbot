@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Raidbot.Services;
 using Raidbot.Users;
 using System;
 using System.Collections.Generic;
@@ -116,12 +117,6 @@ namespace Raidbot
             return Users.ContainsKey(user.Id);
         }
 
-        public bool AddUser(string userName, string role, Availability availability, out string resultMessage)
-        {
-            User raidUser = new User(role, availability, userName, userName, GetFreeUserId());
-            return AddUser(raidUser, role, availability, out resultMessage);
-        }
-
         public ulong GetFreeUserId(ushort startValue = 0)
         {
             ushort id = startValue;
@@ -134,34 +129,6 @@ namespace Raidbot
                 }
             }
             return id;
-        }
-
-        public bool AddUser(IGuildUser user, string role, Availability availability, string usedAccount, out string resultMessage)
-        {
-            string nickname = user.Nickname ?? user.Username;
-            User raidUser = new User(role, availability, nickname, usedAccount, user.Id);
-            return AddUser(raidUser, role, availability, out resultMessage);
-        }
-
-        private bool AddUser(User user, string role, Availability availability, out string resultMessage)
-        {
-            if (!CheckRoleAvailability(user.DiscordId, role, availability, out resultMessage))
-            {
-                return false;
-            }
-
-            if (availability.Equals(Availability.Flex))
-            {
-                FlexRoles.Add(user);
-            }
-            else
-            {
-                Users.Add(user.DiscordId, user);
-            }
-
-            PlannedRaids.UpdateRaid(RaidId, this);
-            resultMessage = "Added to raid roster";
-            return true;
         }
 
         public bool CheckRoleAvailability(ulong userId, string role, Availability availability, out string resultMessage)
@@ -197,67 +164,7 @@ namespace Raidbot
             return true;
         }
 
-        public async Task ManageUser(SocketReaction reaction, IEmote emote, ulong guildId)
-        {
-            ulong userId = reaction.User.Value.Id;
-            if (UserManagement.GetServer(guildId).GetUser(reaction.UserId).GetAccounts(AccountType).Count() == 0)
-            {
-                await UserExtensions.SendMessageAsync(reaction.User.Value, $"No Account found, please add an Account with \"!user add {AccountType} <AccountName>\".\n" +
-                    "\n**This command only works on a server.**");
-                return;
-            }
-
-            if (emote.Equals(Constants.FlexEmoji))
-            {
-                if (!Program.Conversations.ContainsKey(reaction.User.Value.Username))
-                {
-                    Program.Conversations.Add(reaction.User.Value.Username, await SignUpConversation.Create(reaction, this, Availability.Flex));
-                }
-            }
-            else if (Users.ContainsKey(userId))
-            {
-                if (emote.Equals(Constants.SignOnEmoji))
-                {
-                    if (IsAvailabilityChangeAllowed(userId, Availability.Yes))
-                    {
-                        Users[userId].Availability = Availability.Yes;
-                    }
-                }
-                else if (emote.Equals(Constants.UnsureEmoji))
-                {
-                    Users[userId].Availability = Availability.Maybe;
-                }
-                else if (emote.Equals(Constants.BackupEmoji))
-                {
-                    Users[userId].Availability = Availability.Backup;
-                }
-                else if (emote.Equals(Constants.SignOffEmoji))
-                {
-                    RemoveUser(reaction.User.Value);
-                }
-            }
-            else if (!Program.Conversations.ContainsKey(reaction.User.Value.Username))
-            {
-                if (emote.Equals(Constants.SignOnEmoji))
-                {
-                    Program.Conversations.Add(reaction.User.Value.Username, await SignUpConversation.Create(reaction, this, Availability.Yes));
-                }
-                else if (emote.Equals(Constants.UnsureEmoji))
-                {
-                    Program.Conversations.Add(reaction.User.Value.Username, await SignUpConversation.Create(reaction, this, Availability.Maybe));
-                }
-                else if (emote.Equals(Constants.BackupEmoji))
-                {
-                    Program.Conversations.Add(reaction.User.Value.Username, await SignUpConversation.Create(reaction, this, Availability.Backup));
-                }
-            }
-            PlannedRaids.UpdateRaid(RaidId, this);
-            IUserMessage userMessage = (IUserMessage)await reaction.Channel.GetMessageAsync(MessageId);
-            await userMessage.ModifyAsync(msg => msg.Embed = CreateRaidMessage());
-            await userMessage.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
-        }
-
-        private bool IsAvailabilityChangeAllowed(ulong userId, Availability availability)
+        public bool IsAvailabilityChangeAllowed(ulong userId, Availability availability)
         {
             bool isCurrentlyRestrictedAvailability = Users[userId].Availability.Equals(Availability.Yes);
             bool IsChangeToRestrictedAvailability = availability.Equals(Availability.Yes);
@@ -269,37 +176,6 @@ namespace Raidbot
         private bool IsFlexAllowed(ulong userId)
         {
             return FlexRoles.FindAll(flexRole => flexRole.DiscordId.Equals(userId)).Count < maxFlexRoles;
-        }
-
-        public string RemoveUser(IUser user)
-        {
-            return RemoveUser(user.Id);
-        }
-
-        public string RemoveUser(string username)
-        {
-            foreach (User user in Users.Values)
-            {
-                if (user.Nickname == username && user.DiscordId < 256)
-                {
-                    return RemoveUser(user.DiscordId);
-                }
-            }
-            return "user not found";
-        }
-
-        private string RemoveUser(ulong userId)
-        {
-            string message = "user not found";
-            if (Users.ContainsKey(userId))
-            {
-                string name = Users[userId].Nickname;
-                Users.Remove(userId);
-                PlannedRaids.UpdateRaid(RaidId, this);
-                message = $"Successfully removed {name} from raid {MessageId}";
-            }
-            FlexRoles.RemoveAll(flexRole => flexRole.DiscordId.Equals(userId));
-            return message;
         }
 
         public Embed CreateRaidMessage()
@@ -364,17 +240,12 @@ namespace Raidbot
             string rolesString = string.Empty;
             foreach (var user in Users)
             {
-                string name = UserManagement.GetServer(GuildId).GetUser(user.Value.DiscordId).Name;
-                if (string.IsNullOrEmpty(name))
-                {
-                    name = user.Value.Nickname;
-                }
                 //print if the user has the now processed role.
                 if (role.Name.Equals(user.Value.Role, StringComparison.OrdinalIgnoreCase))
                 {
                     if (availability.Equals(user.Value.Availability))
                     {
-                        rolesString += $"\t{name} ({user.Value.UsedAccount}) {PrintAvailability(user.Value.Availability)}\n";
+                        rolesString += $"\t{user.Value.Nickname} ({user.Value.UsedAccount}) {PrintAvailability(user.Value.Availability)}\n";
                         if (blockingRole.Contains(user.Value.Availability))
                         {
                             signedUpUsers++;
@@ -390,14 +261,9 @@ namespace Raidbot
             string flexUsers = string.Empty;
             foreach (User user in FlexRoles)
             {
-                string name = UserManagement.GetServer(GuildId).GetUser(user.DiscordId).Name;
-                if (string.IsNullOrEmpty(name))
-                {
-                    name = user.Nickname;
-                }
                 if (user.Role.Equals(role.Name, StringComparison.OrdinalIgnoreCase))
                 {
-                    flexUsers += $"\t*{name} - flex*\n";
+                    flexUsers += $"\t*{user.Nickname} - flex*\n";
                 }
             }
             return flexUsers;
@@ -435,6 +301,7 @@ namespace Raidbot
         {
             Users.Clear();
             FlexRoles.Clear();
+            ReminderSent = false;
         }
     }
 }

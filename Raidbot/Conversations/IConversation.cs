@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Threading.Tasks;
 
-namespace Raidbot
+namespace Raidbot.Conversations
 {
     interface IConversation
     {
-        public void ProcessMessage(string message);
+        public Task ProcessMessage(string message);
     }
 }

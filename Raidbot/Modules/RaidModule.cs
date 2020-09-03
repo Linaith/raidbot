@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Raidbot.Conversations;
+using Raidbot.Services;
 using System;
 using System.Threading.Tasks;
 
@@ -12,6 +13,15 @@ namespace Raidbot.Modules
     [Group("raid")]
     public class RaidModule : ModuleBase<SocketCommandContext>
     {
+        private readonly ConversationService _conversationService;
+        private readonly RaidService _raidService;
+
+        public RaidModule(ConversationService conversationService, RaidService raidService)
+        {
+            _conversationService = conversationService;
+            _raidService = raidService;
+        }
+
         [Command]
         //[Command("help")]
         [Summary("explains raid commands")]
@@ -48,15 +58,15 @@ namespace Raidbot.Modules
                 if (frequency == 0 && param.Equals("weekly", StringComparison.OrdinalIgnoreCase)) frequency = 7;
                 if (frequency == 0 && param.Equals("daily", StringComparison.OrdinalIgnoreCase)) frequency = 1;
             }
-            if (!Program.Conversations.ContainsKey(Context.User.Username))
+            if (!_conversationService.UserHasConversation(Context.User.Id))
             {
                 if (text)
                 {
-                    Program.Conversations.Add(Context.User.Username, await RaidCreateContinuousTextConversation.Create(Context.User, Context.Guild, frequency));
+                    _conversationService.OpenRaidCreateContinuousTextConversation(_raidService, Context.User, Context.Guild, frequency);
                 }
                 else
                 {
-                    Program.Conversations.Add(Context.User.Username, await RaidCreateConversation.Create(Context.User, Context.Guild, frequency));
+                    _conversationService.OpenRaidCreateConversation(_raidService, Context.User, Context.Guild, frequency);
                 }
             }
             await Context.Message.DeleteAsync();
@@ -66,7 +76,7 @@ namespace Raidbot.Modules
         [Summary("deletes a raid")]
         public async Task DeleteRaidAsync([Summary("Id of the raid")] string raidId)
         {
-            await PlannedRaids.RemoveRaid(raidId, Context.Guild);
+            await _raidService.RemoveRaid(raidId, Context.Guild);
             await Context.Message.DeleteAsync();
         }
 
@@ -86,10 +96,10 @@ namespace Raidbot.Modules
 
         public async Task DeleteRaidWithMessage(string raidId, string[] text, string reason)
         {
-            if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+            if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
                 await HelperFunctions.SendMessageToEveryRaidMember(raid, text, reason);
-                await PlannedRaids.RemoveRaid(raid.RaidId, Context.Guild);
+                await _raidService.RemoveRaid(raid.RaidId, Context.Guild);
             }
             await Context.Message.DeleteAsync();
         }
@@ -98,7 +108,7 @@ namespace Raidbot.Modules
         [Summary("send message to raid members")]
         public async Task SendMessageAsync([Summary("Id of the raid")] string raidId, [Summary("Message")] params string[] text)
         {
-            if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+            if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
                 await HelperFunctions.SendMessageToEveryRaidMember(raid, text);
             }
@@ -108,9 +118,9 @@ namespace Raidbot.Modules
         [Summary("removes a user from the raid")]
         public async Task RemoveUserAsync([Summary("Id of the raid")] string raidId, [Summary("The user")] IUser user)
         {
-            if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+            if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
-                await Context.Channel.SendMessageAsync(raid.RemoveUser(user));
+                await Context.Channel.SendMessageAsync(_raidService.RemoveUser(raidId, user.Id));
                 IUserMessage userMessage = (IUserMessage)await Context.Guild.GetTextChannel(raid.ChannelId).GetMessageAsync(raid.MessageId);
                 await userMessage.ModifyAsync(msg => msg.Embed = raid.CreateRaidMessage());
             }
@@ -121,7 +131,7 @@ namespace Raidbot.Modules
         [Summary("adds a user to the raid")]
         public async Task AddUserAsync([Summary("Id of the raid")] string raidId, [Summary("The user")] IGuildUser user, [Summary("The role the user wants to play")] string role, [Summary("The account used to raid")] string usedAccount, [Summary("Availability of the user")] string availability = "")
         {
-            if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+            if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
                 Raid.Availability availabilityEnum = Raid.Availability.Yes;
                 switch (availability.ToLower())
@@ -133,7 +143,7 @@ namespace Raidbot.Modules
                         availabilityEnum = Raid.Availability.Backup;
                         break;
                 }
-                raid.AddUser(user, role, availabilityEnum, usedAccount, out string resultMessage);
+                _raidService.AddUser(raidId, user, role, availabilityEnum, usedAccount, out string resultMessage);
                 await Context.Channel.SendMessageAsync(resultMessage);
                 IUserMessage userMessage = (IUserMessage)await Context.Guild.GetTextChannel(raid.ChannelId).GetMessageAsync(raid.MessageId);
                 await userMessage.ModifyAsync(msg => msg.Embed = raid.CreateRaidMessage());
@@ -145,7 +155,7 @@ namespace Raidbot.Modules
         [Summary("adds a user to the raid")]
         public async Task AddUsersAsync([Summary("Id of the raid")] string raidId, params string[] users)
         {
-            if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+            if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
                 if (users.Length % 3 != 0)
                 {
@@ -163,7 +173,7 @@ namespace Raidbot.Modules
                     {
                         if (user.Mention == userName && user is IGuildUser guildUser)
                         {
-                            raid.AddUser(guildUser, role, availability, usedAccount, out resultMessage);
+                            _raidService.AddUser(raidId, guildUser, role, availability, usedAccount, out resultMessage);
                         }
 
                     }
@@ -179,9 +189,9 @@ namespace Raidbot.Modules
         [Summary("removes a user from the raid")]
         public async Task RemoveExternalUserAsync([Summary("Id of the raid")] string raidId, [Summary("The name of the user")] string userName)
         {
-            if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+            if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
-                await Context.Channel.SendMessageAsync(raid.RemoveUser(userName));
+                await Context.Channel.SendMessageAsync(_raidService.RemoveUser(raidId, userName));
                 IUserMessage userMessage = (IUserMessage)await Context.Guild.GetTextChannel(raid.ChannelId).GetMessageAsync(raid.MessageId);
                 await userMessage.ModifyAsync(msg => msg.Embed = raid.CreateRaidMessage());
             }
@@ -192,7 +202,7 @@ namespace Raidbot.Modules
         [Summary("adds a user to the raid")]
         public async Task AddExternalUserAsync([Summary("Id of the raid")] string raidId, [Summary("The name of the user")] string userName, [Summary("The role the user wants to play")] string role, [Summary("Availability of the user")] string availability = "")
         {
-            if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+            if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
                 Raid.Availability availabilityEnum = Raid.Availability.Yes;
                 switch (availability.ToLower())
@@ -204,7 +214,7 @@ namespace Raidbot.Modules
                         availabilityEnum = Raid.Availability.Backup;
                         break;
                 }
-                raid.AddUser(userName, role, availabilityEnum, out string resultMessage);
+                _raidService.AddUser(raidId, userName, role, availabilityEnum, out string resultMessage);
                 await Context.Channel.SendMessageAsync(resultMessage);
                 IUserMessage userMessage = (IUserMessage)await Context.Guild.GetTextChannel(raid.ChannelId).GetMessageAsync(raid.MessageId);
                 await userMessage.ModifyAsync(msg => msg.Embed = raid.CreateRaidMessage());
@@ -216,18 +226,18 @@ namespace Raidbot.Modules
         //channelName is needed for correct command routing
         public async Task EditChannelAsync(string raidId, string channelName)
         {
-            if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+            if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
                 foreach (var channel in Context.Message.MentionedChannels)
                 {
                     if (channel is ITextChannel textChannel)
                     {
                         IUserMessage userMessage = (IUserMessage)await Context.Guild.GetTextChannel(raid.ChannelId).GetMessageAsync(raid.MessageId);
-                        await userMessage.DeleteAsync();
                         raid.MessageId = await HelperFunctions.PostRaidMessageAsync(textChannel, raid);
                         raid.ChannelId = channel.Id;
+                        await userMessage.DeleteAsync();
                         await Context.Channel.SendMessageAsync($"raid moved to {channel.Name}");
-                        PlannedRaids.UpdateRaid(raidId, raid);
+                        _raidService.UpdateRaid(raidId, raid);
                         return;
                     }
                 }
@@ -243,7 +253,7 @@ namespace Raidbot.Modules
         [Summary("resets and rescedules a raid")]
         public async Task ResetRaidAsync([Summary("Id of the raid")] string raidId, DateTime date, DateTime time, [Summary("message")] params string[] text)
         {
-            if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+            if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
                 await ResetRaidAsync(raid, date.Date + time.TimeOfDay, text);
             }
@@ -262,7 +272,7 @@ namespace Raidbot.Modules
         [Summary("resets and rescedules a raid")]
         public async Task ResetRaidAsync([Summary("Id of the raid")] string raidId, int delay, [Summary("message")] params string[] text)
         {
-            if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+            if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
                 await ResetRaidAsync(raid, raid.StartTime.AddDays(delay), text);
             }
@@ -275,12 +285,21 @@ namespace Raidbot.Modules
             raid.Reset();
             raid.StartTime = startTime;
             raid.MessageId = await HelperFunctions.Instance().RepostRaidMessage(raid);
-            PlannedRaids.UpdateRaid(raid.RaidId, raid);
+            _raidService.UpdateRaid(raid.RaidId, raid);
         }
 
         [Group("edit")]
         public class RaidEdit : ModuleBase<SocketCommandContext>
         {
+            private readonly ConversationService _conversationService;
+            private readonly RaidService _raidService;
+
+            public RaidEdit(ConversationService conversationService, RaidService raidService)
+            {
+                _conversationService = conversationService;
+                _raidService = raidService;
+            }
+
             // !raid edit
             [Command]
             public async Task DefaultEditAsync()
@@ -347,12 +366,12 @@ namespace Raidbot.Modules
 
             private async Task EditRaid(string raidId, RaidEditConversation.Edits command)
             {
-                if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+                if (_raidService.TryFindRaid(raidId, out Raid raid))
                 {
-                    if (!Program.Conversations.ContainsKey(Context.User.Username))
+                    if (!_conversationService.UserHasConversation(Context.User.Id))
                     {
                         IUserMessage userMessage = (IUserMessage)await Context.Guild.GetTextChannel(raid.ChannelId).GetMessageAsync(raid.MessageId);
-                        Program.Conversations.Add(Context.User.Username, await RaidEditConversation.Create(Context.User, raidId, command, userMessage));
+                        _conversationService.OpenRaidEditConversation(_raidService, Context.User, raidId, command, userMessage);
                     }
                 }
                 else
@@ -365,12 +384,12 @@ namespace Raidbot.Modules
             [Command("role")]
             public async Task EditRoleAsync(string raidId)
             {
-                if (PlannedRaids.TryFindRaid(raidId, out Raid raid))
+                if (_raidService.TryFindRaid(raidId, out Raid raid))
                 {
-                    if (!Program.Conversations.ContainsKey(Context.User.Username))
+                    if (!_conversationService.UserHasConversation(Context.User.Id))
                     {
                         IUserMessage userMessage = (IUserMessage)await Context.Guild.GetTextChannel(raid.ChannelId).GetMessageAsync(raid.MessageId);
-                        Program.Conversations.Add(Context.User.Username, await RaidEditRoleConversation.Create(Context.User, raidId, userMessage));
+                        _conversationService.OpenRaidEditRoleConversation(_raidService, Context.User, raidId, userMessage);
                     }
                 }
                 else

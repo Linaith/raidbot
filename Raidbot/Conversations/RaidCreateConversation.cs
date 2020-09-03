@@ -1,34 +1,33 @@
 ﻿using Discord;
+using Raidbot.Services;
 using Raidbot.Users;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Raidbot
+namespace Raidbot.Conversations
 {
-    class RaidCreateConversation : IConversation
+    class RaidCreateConversation : ConversationBase
     {
         enum State { title, description, channel, date, duration, organisator, guild, voicechat, accountType, roles }
 
-        private readonly IUser _user;
-
         private ITextChannel _channel;
-
         private readonly Raid _raid;
-
         private readonly IGuild _guild;
-
         private State _state;
+        private readonly RaidService _raidService;
+        private readonly UserService _userService;
 
-        private RaidCreateConversation(IUser user, IGuild guild, int frequency)
+        private RaidCreateConversation(ConversationService conversationService, RaidService raidService, UserService userService, IUser user, IGuild guild, int frequency) : base(conversationService, user)
         {
-            _user = user;
-            _raid = new Raid(PlannedRaids.CreateRaidId(), frequency);
+            _raid = new Raid(_raidService.CreateRaidId(), frequency);
             _state = State.title;
             _guild = guild;
+            _raidService = raidService;
+            _userService = userService;
         }
 
-        public static async Task<RaidCreateConversation> Create(IUser user, IGuild guild, int frequency)
+        public static async Task<RaidCreateConversation> Create(ConversationService conversationService, RaidService raidService, UserService userService, IUser user, IGuild guild, int frequency)
         {
             string sendMessage = "Raid Setup:\n" +
 "You can type \"cancel\" at any point during this process to cancel the raid setup\n\n" +
@@ -36,17 +35,11 @@ namespace Raidbot
             await UserExtensions.SendMessageAsync(user, sendMessage);
 
             //Create Conversation
-            return new RaidCreateConversation(user, guild, frequency);
+            return new RaidCreateConversation(conversationService, raidService, userService, user, guild, frequency);
         }
 
-        public async void ProcessMessage(string message)
+        protected override async Task ProcessUncanceledMessage(string message)
         {
-            if (message.Equals("cancel", StringComparison.OrdinalIgnoreCase))
-            {
-                await UserExtensions.SendMessageAsync(_user, "interaction canceled");
-                Program.Conversations.Remove(_user.Username);
-                return;
-            }
             switch (_state)
             {
                 case State.title:
@@ -161,11 +154,11 @@ namespace Raidbot
         public async Task ProcessVoiceChatAsync(string message)
         {
             _raid.VoiceChat = message;
-            if (UserManagement.GetServer(_guild.Id).ListAccountTypes().Count == 1)
+            if (_userService.ListAccountTypes(_guild.Id).Count == 1)
             {
                 await UserExtensions.SendMessageAsync(_user, "Enter the roles for raid run (format: [amount]:[Role name]:[Role description]). Type done to finish entering roles:");
                 _state = State.roles;
-                _raid.AccountType = UserManagement.GetServer(_guild.Id).ListAccountTypes().First();
+                _raid.AccountType = _userService.ListAccountTypes(_guild.Id).First();
             }
             else
             {
@@ -176,7 +169,7 @@ namespace Raidbot
 
         public async Task ProcessAccountTypeAsync(string message)
         {
-            if (UserManagement.GetServer(_guild.Id).ListAccountTypes().Contains(message))
+            if (_userService.ListAccountTypes(_guild.Id).Contains(message))
             {
                 _raid.AccountType = message;
                 await UserExtensions.SendMessageAsync(_user, "Enter the roles for raid run (format: [amount]:[Role name]). Type done to finish entering roles:");
@@ -197,13 +190,13 @@ namespace Raidbot
                 try
                 {
                     ulong raidId = await HelperFunctions.PostRaidMessageAsync(_channel, _raid);
-                    PlannedRaids.AddRaid(_raid, _guild.Id, _channel.Id, raidId);
+                    _raidService.AddRaid(_raid, _guild.Id, _channel.Id, raidId);
                     await UserExtensions.SendMessageAsync(_user, "Created the raid successfully.");
                 }
                 catch { }
                 finally
                 {
-                    Program.Conversations.Remove(_user.Username);
+                    _conversationService.CloseConversation(_user.Id);
                 }
                 return;
             }
@@ -233,7 +226,7 @@ namespace Raidbot
         private string CreateAccountTypeString()
         {
             string accountTypes = string.Empty;
-            foreach (string accountType in UserManagement.GetServer(_guild.Id).ListAccountTypes())
+            foreach (string accountType in _userService.ListAccountTypes(_guild.Id))
             {
                 if (!string.IsNullOrEmpty(accountTypes))
                 {
