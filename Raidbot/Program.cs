@@ -4,7 +4,6 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Raidbot.Services;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -48,8 +47,6 @@ namespace Raidbot
             await _client.StartAsync();
 
             await serviceProvider.GetRequiredService<CommandHandler>().InstallCommandsAsync();
-
-            HelperFunctions.Instance().Init(_client);
 
             // Block this task until the program is closed.
             await Task.Delay(-1);

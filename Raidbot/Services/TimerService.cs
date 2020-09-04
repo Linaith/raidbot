@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discord.WebSocket;
+using System;
 
 namespace Raidbot.Services
 {
@@ -6,11 +7,13 @@ namespace Raidbot.Services
     {
         static System.Timers.Timer _t;
         private readonly RaidService _raidService;
+        private readonly DiscordSocketClient _client;
         private const int REMINDER_INTERVAL = 30;
 
-        public TimerService(RaidService raidService)
+        public TimerService(RaidService raidService, DiscordSocketClient client)
         {
             _raidService = raidService;
+            _client = client;
             Start();
         }
 
@@ -26,8 +29,6 @@ namespace Raidbot.Services
             _t.Start();
         }
 
-
-
         public async void SendReminder(object sender, System.Timers.ElapsedEventArgs e)
         {
             TimeZoneInfo cet = CreateTimeZone();
@@ -39,7 +40,7 @@ namespace Raidbot.Services
                     if (raid.StartTime.CompareTo(now.AddMinutes(REMINDER_INTERVAL)) <= 0 && !raid.ReminderSent)
                     {
                         string message = $"The raid \"{raid.Title}\" starts in {REMINDER_INTERVAL} minutes.";
-                        await HelperFunctions.Instance().SendMessageToEveryRaidMember(raid, message);
+                        await _raidService.SendMessageToEveryRaidMember(raid, message);
                         raid.ReminderSent = true;
                     }
                 }
@@ -61,11 +62,11 @@ namespace Raidbot.Services
                         {
                             raid.Reset();
                             raid.StartTime = raid.StartTime.AddDays(raid.Frequency);
-                            raid.MessageId = await HelperFunctions.Instance().RepostRaidMessage(raid);
+                            raid.MessageId = await _raidService.RepostRaidMessage(raid);
                         }
                         else
                         {
-                            await _raidService.RemoveRaid(raid.RaidId, HelperFunctions.Instance().GetGuildById(raid.GuildId));
+                            await _raidService.RemoveRaid(raid.RaidId, _client.GetGuild(raid.GuildId));
                         }
                         _raidService.SaveRaids();
                     }

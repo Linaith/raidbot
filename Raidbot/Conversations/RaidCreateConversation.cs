@@ -189,7 +189,7 @@ namespace Raidbot.Conversations
             {
                 try
                 {
-                    ulong raidId = await HelperFunctions.PostRaidMessageAsync(_channel, _raid);
+                    ulong raidId = await _raidService.PostRaidMessageAsync(_channel, _raid);
                     _raidService.AddRaid(_raid, _guild.Id, _channel.Id, raidId);
                     await UserExtensions.SendMessageAsync(_user, "Created the raid successfully.");
                 }

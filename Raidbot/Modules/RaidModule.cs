@@ -98,7 +98,7 @@ namespace Raidbot.Modules
         {
             if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
-                await HelperFunctions.SendMessageToEveryRaidMember(raid, text, reason);
+                await _raidService.SendMessageToEveryRaidMember(raid, text, reason);
                 await _raidService.RemoveRaid(raid.RaidId, Context.Guild);
             }
             await Context.Message.DeleteAsync();
@@ -110,7 +110,7 @@ namespace Raidbot.Modules
         {
             if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
-                await HelperFunctions.SendMessageToEveryRaidMember(raid, text);
+                await _raidService.SendMessageToEveryRaidMember(raid, text);
             }
         }
 
@@ -233,7 +233,7 @@ namespace Raidbot.Modules
                     if (channel is ITextChannel textChannel)
                     {
                         IUserMessage userMessage = (IUserMessage)await Context.Guild.GetTextChannel(raid.ChannelId).GetMessageAsync(raid.MessageId);
-                        raid.MessageId = await HelperFunctions.PostRaidMessageAsync(textChannel, raid);
+                        raid.MessageId = await _raidService.PostRaidMessageAsync(textChannel, raid);
                         raid.ChannelId = channel.Id;
                         await userMessage.DeleteAsync();
                         await Context.Channel.SendMessageAsync($"raid moved to {channel.Name}");
@@ -253,10 +253,7 @@ namespace Raidbot.Modules
         [Summary("resets and rescedules a raid")]
         public async Task ResetRaidAsync([Summary("Id of the raid")] string raidId, DateTime date, DateTime time, [Summary("message")] params string[] text)
         {
-            if (_raidService.TryFindRaid(raidId, out Raid raid))
-            {
-                await ResetRaidAsync(raid, date.Date + time.TimeOfDay, text);
-            }
+            await _raidService.ResetRaidAsync(raidId, date.Date + time.TimeOfDay, text);
             await Context.Message.DeleteAsync();
         }
 
@@ -274,18 +271,9 @@ namespace Raidbot.Modules
         {
             if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
-                await ResetRaidAsync(raid, raid.StartTime.AddDays(delay), text);
+                await _raidService.ResetRaidAsync(raidId, raid.StartTime.AddDays(delay), text);
             }
             await Context.Message.DeleteAsync();
-        }
-
-        public async Task ResetRaidAsync(Raid raid, DateTime startTime, string[] text)
-        {
-            await HelperFunctions.SendMessageToEveryRaidMember(raid, text);
-            raid.Reset();
-            raid.StartTime = startTime;
-            raid.MessageId = await HelperFunctions.Instance().RepostRaidMessage(raid);
-            _raidService.UpdateRaid(raid.RaidId, raid);
         }
 
         [Group("edit")]

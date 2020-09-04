@@ -101,7 +101,7 @@ namespace Raidbot.Services
             SaveUsers();
         }
 
-        public User GetUser(ulong guildId, ulong userId)
+        private User GetUser(ulong guildId, ulong userId)
         {
             DiscordServer server = GetServer(guildId);
             if (!server.Users.ContainsKey(userId))
@@ -214,12 +214,17 @@ namespace Raidbot.Services
         {
             User user = GetUser(guildId, userId);
             user.Name = name;
+            SaveUsers();
+        }
+
+        public string GetUserName(ulong guildId, ulong userId)
+        {
+            return GetUser(guildId, userId).Name;
         }
 
         public string GetDiscordName(ulong guildId, ulong userId)
         {
-            User user = GetUser(guildId, userId);
-            return user.GuildNickname;
+            return GetUser(guildId, userId).GuildNickname;
         }
     }
 }

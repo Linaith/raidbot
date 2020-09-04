@@ -17,14 +17,17 @@ namespace Raidbot.Services
 
         private readonly ConversationService _conversationService;
 
+        private readonly DiscordSocketClient _client;
+
         private static readonly Random _random = new Random();
 
-        public RaidService(UserService userService, ConversationService conversationService)
+        public RaidService(UserService userService, ConversationService conversationService, DiscordSocketClient client)
         {
             Raids = new Dictionary<string, Raid>();
             LoadRaids();
             _userService = userService;
             _conversationService = conversationService;
+            _client = client;
         }
 
         public IEnumerable<Raid> ListRaids()
@@ -78,6 +81,7 @@ namespace Raidbot.Services
             SaveRaids();
         }
 
+        //TODO: eliminate this function!!!!
         public bool TryFindRaid(string raidId, out Raid raid)
         {
             if (Raids.ContainsKey(raidId))
@@ -117,7 +121,7 @@ namespace Raidbot.Services
 
         public bool AddUser(string raidId, IGuildUser user, string role, Availability availability, string usedAccount, out string resultMessage)
         {
-            string nickname = _userService.GetUser(user.GuildId, user.Id).Name;
+            string nickname = _userService.GetUserName(user.GuildId, user.Id);
             if (string.IsNullOrEmpty(nickname))
             {
                 nickname = user.Nickname ?? user.Username;
@@ -288,6 +292,61 @@ namespace Raidbot.Services
                 return true;
             }
             return false;
+        }
+
+        public async Task ResetRaidAsync(string raidId, DateTime startTime, string[] text)
+        {
+            if (TryFindRaid(raidId, out Raid raid))
+            {
+                await SendMessageToEveryRaidMember(raid, text);
+                raid.Reset();
+                raid.StartTime = startTime;
+                raid.MessageId = await RepostRaidMessage(raid);
+                SaveRaids();
+            }
+        }
+
+        public async Task<ulong> RepostRaidMessage(Raid raid)
+        {
+            SocketTextChannel channel = (SocketTextChannel)_client.GetChannel(raid.ChannelId);
+            IUserMessage userMessage = (IUserMessage)await channel.GetMessageAsync(raid.MessageId);
+            await userMessage.DeleteAsync();
+            return await PostRaidMessageAsync(channel, raid);
+        }
+
+        public async Task<ulong> PostRaidMessageAsync(ITextChannel channel, Raid raid)
+        {
+            var raidMessage = await channel.SendMessageAsync(embed: raid.CreateRaidMessage());
+            await raidMessage.AddReactionAsync(Constants.SignOnEmoji);
+            await raidMessage.AddReactionAsync(Constants.UnsureEmoji);
+            await raidMessage.AddReactionAsync(Constants.BackupEmoji);
+            await raidMessage.AddReactionAsync(Constants.FlexEmoji);
+            await raidMessage.AddReactionAsync(Constants.SignOffEmoji);
+            return raidMessage.Id;
+        }
+
+        public async Task SendMessageToEveryRaidMember(Raid raid, string[] text, string reason = "")
+        {
+            if (text.Length > 0)
+            {
+                string message = $"{raid.Title} {reason}: ";
+                foreach (string log in text)
+                {
+                    message += $" {log}";
+                }
+                await SendMessageToEveryRaidMember(raid, message);
+            }
+        }
+
+        public async Task SendMessageToEveryRaidMember(Raid raid, string message)
+        {
+            foreach (var user in raid.Users)
+            {
+                if (user.Value.DiscordId != 0)
+                {
+                    await _client.GetUser(user.Value.DiscordId).SendMessageAsync(message);
+                }
+            }
         }
     }
 }
