@@ -84,7 +84,7 @@ namespace Raidbot.Modules
             }
             if (_userService.AddAccount(Context.Guild.Id, Context.User.Id, accountType, accountDetails, out string errorMessage))
             {
-                await Context.Channel.SendMessageAsync($"Account {accountDetails} was added to your {accountDetails} accounts.");
+                await Context.Channel.SendMessageAsync($"Account {accountDetails} was added to your {accountType} accounts.");
                 return;
             }
             await Context.Channel.SendMessageAsync(errorMessage);

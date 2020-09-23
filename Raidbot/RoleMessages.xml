@@ -107,5 +107,9 @@
       <Name>Cthulhu</Name>
       <Icon>🦑</Icon>
     </Role>
+    <Role>
+      <Name>Ashes of Creation</Name>
+      <Icon>🐣</Icon>
+    </Role>
   </LIEBAnderes>
 </Messages>
