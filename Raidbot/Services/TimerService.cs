@@ -14,7 +14,6 @@ namespace Raidbot.Services
         {
             _raidService = raidService;
             _client = client;
-            Start();
         }
 
         public void Start()

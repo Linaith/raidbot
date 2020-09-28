@@ -77,6 +77,10 @@
       <Name>Meme</Name>
       <Icon>&#128243;</Icon>
     </Role>
+    <Role>
+      <Name>Inspiro</Name>
+      <Icon>🖼️</Icon>
+    </Role>
   </LIEB>
   <LIEBAnderes>
     <Role>
@@ -96,6 +100,10 @@
       <Icon>&#128000;</Icon>
     </Role>
     <Role>
+      <Name>PokemonBot</Name>
+      <Icon>🦔</Icon>
+    </Role>
+    <Role>
       <Name>Larp</Name>
       <Icon>🤹</Icon>
     </Role>
@@ -110,6 +118,10 @@
     <Role>
       <Name>Ashes of Creation</Name>
       <Icon>🐣</Icon>
+    </Role>
+    <Role>
+      <Name>EpicRPG</Name>
+      <Icon>⚔️</Icon>
     </Role>
   </LIEBAnderes>
 </Messages>

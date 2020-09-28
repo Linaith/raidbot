@@ -342,7 +342,7 @@ namespace Raidbot.Services
         {
             foreach (var user in raid.Users)
             {
-                if (user.Value.DiscordId != 0)
+                if (user.Value.DiscordId > 100)
                 {
                     await _client.GetUser(user.Value.DiscordId).SendMessageAsync(message);
                 }

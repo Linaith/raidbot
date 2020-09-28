@@ -20,11 +20,11 @@ namespace Raidbot.Conversations
 
         private RaidCreateConversation(ConversationService conversationService, RaidService raidService, UserService userService, IUser user, IGuild guild, int frequency) : base(conversationService, user)
         {
-            _raid = new Raid(_raidService.CreateRaidId(), frequency);
-            _state = State.title;
             _guild = guild;
             _raidService = raidService;
             _userService = userService;
+            _raid = new Raid(_raidService.CreateRaidId(), frequency);
+            _state = State.title;
         }
 
         public static async Task<RaidCreateConversation> Create(ConversationService conversationService, RaidService raidService, UserService userService, IUser user, IGuild guild, int frequency)

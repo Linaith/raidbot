@@ -46,6 +46,7 @@ namespace Raidbot
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
 
+            serviceProvider.GetRequiredService<TimerService>().Start();
             await serviceProvider.GetRequiredService<CommandHandler>().InstallCommandsAsync();
 
             // Block this task until the program is closed.
