@@ -46,7 +46,7 @@ namespace Raidbot.Services
 
         public async Task<bool> RemoveRaid(string raidId, SocketGuild guild)
         {
-            if (TryFindRaid(raidId, out Raid raid) && raid.GuildId.Equals(guild.Id))
+            if (guild != null && TryFindRaid(raidId, out Raid raid) && raid.GuildId.Equals(guild.Id))
             {
                 IUserMessage userMessage = (IUserMessage)await guild.GetTextChannel(raid.ChannelId).GetMessageAsync(raid.MessageId);
                 await userMessage.DeleteAsync();
@@ -309,20 +309,33 @@ namespace Raidbot.Services
         public async Task<ulong> RepostRaidMessage(Raid raid)
         {
             SocketTextChannel channel = (SocketTextChannel)_client.GetChannel(raid.ChannelId);
-            IUserMessage userMessage = (IUserMessage)await channel.GetMessageAsync(raid.MessageId);
-            await userMessage.DeleteAsync();
+            if (channel != null)
+            {
+                IUserMessage userMessage = (IUserMessage)await channel.GetMessageAsync(raid.MessageId);
+                if (userMessage != null)
+                {
+                    await userMessage.DeleteAsync();
+                }
+            }
             return await PostRaidMessageAsync(channel, raid);
         }
 
         public async Task<ulong> PostRaidMessageAsync(ITextChannel channel, Raid raid)
         {
-            var raidMessage = await channel.SendMessageAsync(embed: raid.CreateRaidMessage());
-            await raidMessage.AddReactionAsync(Constants.SignOnEmoji);
-            await raidMessage.AddReactionAsync(Constants.UnsureEmoji);
-            await raidMessage.AddReactionAsync(Constants.BackupEmoji);
-            await raidMessage.AddReactionAsync(Constants.FlexEmoji);
-            await raidMessage.AddReactionAsync(Constants.SignOffEmoji);
-            return raidMessage.Id;
+            if (channel != null)
+            {
+                var raidMessage = await channel.SendMessageAsync(embed: raid.CreateRaidMessage());
+                await raidMessage.AddReactionAsync(Constants.SignOnEmoji);
+                await raidMessage.AddReactionAsync(Constants.UnsureEmoji);
+                await raidMessage.AddReactionAsync(Constants.BackupEmoji);
+                await raidMessage.AddReactionAsync(Constants.FlexEmoji);
+                await raidMessage.AddReactionAsync(Constants.SignOffEmoji);
+                return raidMessage.Id;
+            }
+            else
+            {
+                throw new ArgumentNullException();
+            }
         }
 
         public async Task SendMessageToEveryRaidMember(Raid raid, string[] text, string reason = "")
@@ -342,9 +355,10 @@ namespace Raidbot.Services
         {
             foreach (var user in raid.Users)
             {
-                if (user.Value.DiscordId > 100)
+                SocketUser socketUser = _client.GetUser(user.Value.DiscordId);
+                if (socketUser != null)
                 {
-                    await _client.GetUser(user.Value.DiscordId).SendMessageAsync(message);
+                    await socketUser.SendMessageAsync(message);
                 }
             }
         }

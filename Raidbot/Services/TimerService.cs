@@ -41,6 +41,7 @@ namespace Raidbot.Services
                         string message = $"The raid \"{raid.Title}\" starts in {REMINDER_INTERVAL} minutes.";
                         await _raidService.SendMessageToEveryRaidMember(raid, message);
                         raid.ReminderSent = true;
+                        _raidService.SaveRaids();
                     }
                 }
             }
