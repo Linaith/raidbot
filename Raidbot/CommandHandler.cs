@@ -74,14 +74,6 @@ namespace Raidbot
                 _conversationService.ProcessMessage(context.User.Id, message.Content);
             }
 
-            if (IsBotMentioned(messageParam, context))
-            {
-                if (!message.HasMentionPrefix(_client.CurrentUser, ref argPos) || message.Content.Equals(_client.CurrentUser.Mention))
-                {
-                    //TODO: send some messages
-                }
-            }
-
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
             if (!(message.HasCharPrefix('!', ref argPos) ||
                 message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
@@ -114,16 +106,20 @@ namespace Raidbot
 
             //check if the reaction was on a bot message
             if (!message.Author.Id.Equals(_client.CurrentUser.Id)) return;
-            if (!reaction.User.IsSpecified || reaction.User.Value.IsBot) return;
+
 
             if (message.Channel.GetType() == typeof(SocketTextChannel))
             {
                 IGuild guild = ((SocketGuildChannel)message.Channel).Guild;
-                IGuildUser user = await guild.GetUserAsync(reaction.UserId);
+                IGuildUser user = await GetGuildUser(guild, reaction);
+                if (user.IsBot) return;
+
+                //Raid message
                 if (_raidService.TryFindRaid(guild.Id, message.Channel.Id, message.Id, out Raid raid))
                 {
-                    await _raidService.HandleReaction(reaction, guild.Id, raid.RaidId);
+                    await _raidService.HandleReaction(reaction, user, guild.Id, raid.RaidId);
                 }
+                //Role message
                 if (_roleService.IsRoleMessage(message.Id))
                 {
                     await _roleService.SetRole(guild, user, reaction);
@@ -132,12 +128,23 @@ namespace Raidbot
             else if (message.Channel.GetType() == typeof(SocketDMChannel))
             {
                 //if it is a private message and contains an embed its probably a raid review
-                if (message.Embeds.Count > 0 && _conversationService.UserHasConversation(reaction.User.Value.Id))
+                if (message.Embeds.Count > 0 && _conversationService.UserHasConversation(reaction.UserId))
                 {
-                    _conversationService.ProcessMessage(reaction.User.Value.Id, reaction.Emote.Name);
+                    _conversationService.ProcessMessage(reaction.UserId, reaction.Emote.Name);
                 }
             }
-            // UserExtensions.SendMessageAsync(reaction.User.Value, reaction.Emote.ToString());//echo emote
+        }
+
+        private async Task<IGuildUser> GetGuildUser(IGuild guild, SocketReaction reaction)
+        {
+            if (reaction.User.IsSpecified)
+            {
+                return await guild.GetUserAsync(reaction.UserId);
+            }
+            else
+            {
+                return await _client.Rest.GetGuildUserAsync(guild.Id, reaction.UserId);
+            }
         }
 
         private async Task HandleReactionRemovedAsync(Cacheable<IUserMessage, ulong> cacheable, ISocketMessageChannel channel, SocketReaction reaction)
@@ -146,12 +153,13 @@ namespace Raidbot
 
             //check if the reaction was on a bot message
             if (!message.Author.Id.Equals(_client.CurrentUser.Id)) return;
-            if (!reaction.User.IsSpecified || reaction.User.Value.IsBot) return;
 
             if (message.Channel.GetType() == typeof(SocketTextChannel))
             {
                 IGuild guild = ((SocketGuildChannel)message.Channel).Guild;
-                IGuildUser user = await guild.GetUserAsync(reaction.UserId);
+                IGuildUser user = await GetGuildUser(guild, reaction);
+                if (user.IsBot) return;
+
                 if (_roleService.IsRoleMessage(message.Id))
                 {
                     await _roleService.UnsetRole(guild, user, reaction);

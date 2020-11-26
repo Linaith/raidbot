@@ -32,29 +32,25 @@ namespace Raidbot.Conversations
             _state = State.role;
         }
 
-        public static async Task<SignUpConversation> Create(ConversationService conversationService, RaidService raidService, UserService userService, SocketReaction reaction, Raid raid, Raid.Availability availability)
+        public static async Task<SignUpConversation> Create(ConversationService conversationService, RaidService raidService, UserService userService, SocketReaction reaction, IGuildUser user, Raid raid, Raid.Availability availability)
         {
-            if (reaction.User.Value is IGuildUser user)
+            //Create Conversation
+            SignUpConversation conversation = new SignUpConversation(conversationService, raidService, userService, reaction.Channel, user, raid, availability);
+
+            //remiove reaction
+            IUserMessage userMessage = (IUserMessage)await conversation._channel.GetMessageAsync(conversation._raid.MessageId);
+            await userMessage.RemoveReactionAsync(reaction.Emote, conversation._user);
+
+            //send sign up message
+            if (reaction.Emote.Equals(Constants.FlexEmoji))
             {
-                //Create Conversation
-                SignUpConversation conversation = new SignUpConversation(conversationService, raidService, userService, reaction.Channel, user, raid, availability);
-
-                //remiove reaction
-                IUserMessage userMessage = (IUserMessage)await conversation._channel.GetMessageAsync(conversation._raid.MessageId);
-                await userMessage.RemoveReactionAsync(reaction.Emote, conversation._user);
-
-                //send sign up message
-                if (reaction.Emote.Equals(Constants.FlexEmoji))
-                {
-                    await UserExtensions.SendMessageAsync(conversation._user, CreateFlexRoleMessage(conversation._raid));
-                }
-                else
-                {
-                    await UserExtensions.SendMessageAsync(conversation._user, CreateSignUpMessage(conversation._raid));
-                }
-                return conversation;
+                await UserExtensions.SendMessageAsync(conversation._user, CreateFlexRoleMessage(conversation._raid));
             }
-            throw new Exception("User is no GuildUser");
+            else
+            {
+                await UserExtensions.SendMessageAsync(conversation._user, CreateSignUpMessage(conversation._raid));
+            }
+            return conversation;
         }
 
         private static string CreateSignUpMessage(Raid raid)

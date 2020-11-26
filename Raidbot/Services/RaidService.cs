@@ -200,7 +200,7 @@ namespace Raidbot.Services
             }
         }
 
-        public async Task HandleReaction(SocketReaction reaction, ulong guildId, string raidId)
+        public async Task HandleReaction(SocketReaction reaction, IGuildUser user, ulong guildId, string raidId)
         {
             if (!Raids.ContainsKey(raidId))
             {
@@ -213,26 +213,26 @@ namespace Raidbot.Services
 
             if (emote.Equals(Constants.SignOffEmoji))
             {
-                RemoveUser(raid.RaidId, reaction.User.Value.Id);
+                RemoveUser(raid.RaidId, user.Id);
                 SaveRaids();
                 await userMessage.ModifyAsync(msg => msg.Embed = raid.CreateRaidMessage());
-                await userMessage.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                await userMessage.RemoveReactionAsync(reaction.Emote, user);
                 return;
             }
 
-            ulong userId = reaction.User.Value.Id;
+            ulong userId = user.Id;
             if (_userService.GetAccounts(guildId, userId, raid.AccountType).Count == 0)
             {
-                await UserExtensions.SendMessageAsync(reaction.User.Value, $"No Account found, please add an Account with \"!user add {raid.AccountType} <AccountName>\".\n" +
+                await UserExtensions.SendMessageAsync(user, $"No Account found, please add an Account with \"!user add {raid.AccountType} <AccountName>\".\n" +
                     "\n**This command only works on a server.**");
                 return;
             }
 
             if (emote.Equals(Constants.FlexEmoji))
             {
-                if (!_conversationService.UserHasConversation(reaction.User.Value.Id))
+                if (!_conversationService.UserHasConversation(user.Id))
                 {
-                    _conversationService.OpenSignUpConversation(this, reaction, raid, Availability.Flex);
+                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Availability.Flex);
                 }
             }
             else if (raid.Users.ContainsKey(userId))
@@ -253,24 +253,24 @@ namespace Raidbot.Services
                     raid.Users[userId].Availability = Raid.Availability.Backup;
                 }
             }
-            else if (!_conversationService.UserHasConversation(reaction.User.Value.Id))
+            else if (!_conversationService.UserHasConversation(user.Id))
             {
                 if (emote.Equals(Constants.SignOnEmoji))
                 {
-                    _conversationService.OpenSignUpConversation(this, reaction, raid, Availability.Yes);
+                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Availability.Yes);
                 }
                 else if (emote.Equals(Constants.UnsureEmoji))
                 {
-                    _conversationService.OpenSignUpConversation(this, reaction, raid, Availability.Maybe);
+                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Availability.Maybe);
                 }
                 else if (emote.Equals(Constants.BackupEmoji))
                 {
-                    _conversationService.OpenSignUpConversation(this, reaction, raid, Availability.Backup);
+                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Availability.Backup);
                 }
             }
             SaveRaids();
             await userMessage.ModifyAsync(msg => msg.Embed = raid.CreateRaidMessage());
-            await userMessage.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+            await userMessage.RemoveReactionAsync(reaction.Emote, user);
         }
 
         public string CreateRaidId()

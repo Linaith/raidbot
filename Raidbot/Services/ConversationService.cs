@@ -66,9 +66,9 @@ namespace Raidbot.Services
             _conversations.Add(user.Id, await RaidEditRoleConversation.Create(this, raidService, user, raidId, userMessage));
         }
 
-        public async void OpenSignUpConversation(RaidService raidService, SocketReaction reaction, Raid raid, Raid.Availability availability)
+        public async void OpenSignUpConversation(RaidService raidService, SocketReaction reaction, IGuildUser user, Raid raid, Raid.Availability availability)
         {
-            _conversations.Add(reaction.User.Value.Id, await SignUpConversation.Create(this, raidService, _userService, reaction, raid, availability));
+            _conversations.Add(user.Id, await SignUpConversation.Create(this, raidService, _userService, reaction, user, raid, availability));
         }
 
         public void CloseConversation(ulong userId)
