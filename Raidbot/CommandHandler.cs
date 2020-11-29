@@ -54,7 +54,15 @@ namespace Raidbot
 
         private async Task HandleMessageDeleted(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
         {
-            _roleService.DeleteMessage(message.Id);
+            if (_roleService.IsRoleMessage(message.Id))
+            {
+                _roleService.DeleteMessage(message.Id);
+            }
+            else if (channel is SocketGuildChannel guildChannel
+                && _raidService.TryFindRaid(guildChannel.Guild.Id, guildChannel.Id, message.Id, out Raid raid))
+            {
+                await _raidService.RemoveRaid(raid.RaidId, guildChannel.Guild);
+            }
         }
 
         private async Task HandleCommandAsync(SocketMessage messageParam)
@@ -86,18 +94,6 @@ namespace Raidbot
                 context: context,
                 argPos: argPos,
                 services: _services);
-        }
-
-        private bool IsBotMentioned(SocketMessage messageParam, SocketCommandContext context)
-        {
-            foreach (SocketUser user in messageParam.MentionedUsers)
-            {
-                if (user.IsBot && user.Username.Equals(context.Client.CurrentUser.Username))
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
         private async Task HandleReactionAsync(Cacheable<IUserMessage, ulong> cacheable, ISocketMessageChannel channel, SocketReaction reaction)

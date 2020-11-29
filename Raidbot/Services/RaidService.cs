@@ -49,7 +49,10 @@ namespace Raidbot.Services
             if (guild != null && TryFindRaid(raidId, out Raid raid) && raid.GuildId.Equals(guild.Id))
             {
                 IUserMessage userMessage = (IUserMessage)await guild.GetTextChannel(raid.ChannelId).GetMessageAsync(raid.MessageId);
-                await userMessage.DeleteAsync();
+                if (userMessage != null)
+                {
+                    await userMessage.DeleteAsync();
+                }
                 Raids.Remove(raidId);
                 SaveRaids();
                 return true;
