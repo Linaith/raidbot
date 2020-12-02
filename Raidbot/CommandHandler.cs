@@ -54,14 +54,10 @@ namespace Raidbot
 
         private async Task HandleMessageDeleted(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
         {
+            //WARNING: Do NOT delete Raids here! The weekly reset deletes the Message.
             if (_roleService.IsRoleMessage(message.Id))
             {
                 _roleService.DeleteMessage(message.Id);
-            }
-            else if (channel is SocketGuildChannel guildChannel
-                && _raidService.TryFindRaid(guildChannel.Guild.Id, guildChannel.Id, message.Id, out Raid raid))
-            {
-                await _raidService.RemoveRaid(raid.RaidId, guildChannel.Guild);
             }
         }
 
