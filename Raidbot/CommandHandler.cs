@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Raidbot.Models;
 using Raidbot.Services;
 using System;
 using System.Reflection;

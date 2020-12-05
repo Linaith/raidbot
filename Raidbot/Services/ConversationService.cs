@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Raidbot.Conversations;
+using Raidbot.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -66,7 +67,7 @@ namespace Raidbot.Services
             _conversations.Add(user.Id, await RaidEditRoleConversation.Create(this, raidService, user, raidId, userMessage));
         }
 
-        public async void OpenSignUpConversation(RaidService raidService, SocketReaction reaction, IGuildUser user, Raid raid, Raid.Availability availability)
+        public async void OpenSignUpConversation(RaidService raidService, SocketReaction reaction, IGuildUser user, Raid raid, Constants.Availability availability)
         {
             _conversations.Add(user.Id, await SignUpConversation.Create(this, raidService, _userService, reaction, user, raid, availability));
         }

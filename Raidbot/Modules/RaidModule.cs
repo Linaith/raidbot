@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Raidbot.Conversations;
+using Raidbot.Models;
 using Raidbot.Services;
 using System;
 using System.Threading.Tasks;
@@ -133,14 +134,14 @@ namespace Raidbot.Modules
         {
             if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
-                Raid.Availability availabilityEnum = Raid.Availability.Yes;
+                Constants.Availability availabilityEnum = Constants.Availability.Yes;
                 switch (availability.ToLower())
                 {
                     case "maybe":
-                        availabilityEnum = Raid.Availability.Maybe;
+                        availabilityEnum = Constants.Availability.Maybe;
                         break;
                     case "backup":
-                        availabilityEnum = Raid.Availability.Backup;
+                        availabilityEnum = Constants.Availability.Backup;
                         break;
                 }
                 _raidService.AddUser(raidId, user, role, availabilityEnum, usedAccount, out string resultMessage);
@@ -161,7 +162,7 @@ namespace Raidbot.Modules
                 {
                     await Context.Channel.SendMessageAsync("wrong number of parameters.");
                 }
-                Raid.Availability availability = Raid.Availability.Yes;
+                Constants.Availability availability = Constants.Availability.Yes;
                 string resultMessage = string.Empty;
                 for (int i = 0; i < users.Length; i += 3)
                 {
@@ -204,14 +205,14 @@ namespace Raidbot.Modules
         {
             if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
-                Raid.Availability availabilityEnum = Raid.Availability.Yes;
+                Constants.Availability availabilityEnum = Constants.Availability.Yes;
                 switch (availability.ToLower())
                 {
                     case "maybe":
-                        availabilityEnum = Raid.Availability.Maybe;
+                        availabilityEnum = Constants.Availability.Maybe;
                         break;
                     case "backup":
-                        availabilityEnum = Raid.Availability.Backup;
+                        availabilityEnum = Constants.Availability.Backup;
                         break;
                 }
                 _raidService.AddUser(raidId, userName, role, availabilityEnum, out string resultMessage);

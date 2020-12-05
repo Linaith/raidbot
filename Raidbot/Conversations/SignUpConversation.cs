@@ -1,10 +1,11 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Raidbot.Models;
 using Raidbot.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using static Raidbot.Raid;
+
 
 namespace Raidbot.Conversations
 {
@@ -14,14 +15,14 @@ namespace Raidbot.Conversations
         private new readonly IGuildUser _user;
         private readonly ISocketMessageChannel _channel;
         private readonly Raid _raid;
-        private readonly Raid.Availability _availability;
+        private readonly Constants.Availability _availability;
         private string _role;
         private string _usedAccount;
         private State _state;
         private readonly RaidService _raidService;
         private readonly UserService _userService;
 
-        private SignUpConversation(ConversationService conversationService, RaidService raidService, UserService userService, ISocketMessageChannel channel, IGuildUser user, Raid raid, Raid.Availability availability) : base(conversationService, user)
+        private SignUpConversation(ConversationService conversationService, RaidService raidService, UserService userService, ISocketMessageChannel channel, IGuildUser user, Raid raid, Constants.Availability availability) : base(conversationService, user)
         {
             _user = user;
             _channel = channel;
@@ -32,7 +33,7 @@ namespace Raidbot.Conversations
             _state = State.role;
         }
 
-        public static async Task<SignUpConversation> Create(ConversationService conversationService, RaidService raidService, UserService userService, SocketReaction reaction, IGuildUser user, Raid raid, Raid.Availability availability)
+        public static async Task<SignUpConversation> Create(ConversationService conversationService, RaidService raidService, UserService userService, SocketReaction reaction, IGuildUser user, Raid raid, Constants.Availability availability)
         {
             //Create Conversation
             SignUpConversation conversation = new SignUpConversation(conversationService, raidService, userService, reaction.Channel, user, raid, availability);
