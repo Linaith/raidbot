@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace Raidbot
 {
-    public class Constants
+    public static class Constants
     {
         public static string DateFormat = "dd.MM.yyyy hh:mm";
         public static CultureInfo Culture = new CultureInfo("de-DE");
@@ -16,6 +16,8 @@ namespace Raidbot
         public static Emoji FlexEmoji = new Emoji("\u2755");
         public const string SAVEFOLDER = "data";
         public const string ACCOUNT_REGEX = "^[a-zA-z ]{3,27}\\.[0-9]{4}$";
+        public const int MaxFlexRoles = 2;
+        public enum Availability { Yes, Maybe, Backup, Flex };
 
         /*
         readonly IEmote[] reactions = new IEmote[] { //Emote.Parse("<:warrior_spellbreaker:666957477690081290>"),

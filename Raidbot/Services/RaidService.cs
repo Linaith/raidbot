@@ -1,10 +1,10 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Raidbot.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using static Raidbot.Raid;
 
 namespace Raidbot.Services
 {
@@ -110,7 +110,7 @@ namespace Raidbot.Services
             return false;
         }
 
-        public bool AddUser(string raidId, string userName, string role, Availability availability, out string resultMessage)
+        public bool AddUser(string raidId, string userName, string role, Constants.Availability availability, out string resultMessage)
         {
             if (!Raids.ContainsKey(raidId))
             {
@@ -122,7 +122,7 @@ namespace Raidbot.Services
             return AddUser(raidId, raidUser, role, availability, out resultMessage);
         }
 
-        public bool AddUser(string raidId, IGuildUser user, string role, Availability availability, string usedAccount, out string resultMessage)
+        public bool AddUser(string raidId, IGuildUser user, string role, Constants.Availability availability, string usedAccount, out string resultMessage)
         {
             string nickname = _userService.GetUserName(user.GuildId, user.Id);
             if (string.IsNullOrEmpty(nickname))
@@ -133,7 +133,7 @@ namespace Raidbot.Services
             return AddUser(raidId, raidUser, role, availability, out resultMessage);
         }
 
-        private bool AddUser(string raidId, User user, string role, Availability availability, out string resultMessage)
+        private bool AddUser(string raidId, User user, string role, Constants.Availability availability, out string resultMessage)
         {
             if (!Raids.ContainsKey(raidId))
             {
@@ -146,7 +146,7 @@ namespace Raidbot.Services
                 return false;
             }
 
-            if (availability.Equals(Availability.Flex))
+            if (availability.Equals(Constants.Availability.Flex))
             {
                 raid.FlexRoles.Add(user);
             }
@@ -235,40 +235,40 @@ namespace Raidbot.Services
             {
                 if (!_conversationService.UserHasConversation(user.Id))
                 {
-                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Availability.Flex);
+                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Constants.Availability.Flex);
                 }
             }
             else if (raid.Users.ContainsKey(userId))
             {
                 if (emote.Equals(Constants.SignOnEmoji))
                 {
-                    if (raid.IsAvailabilityChangeAllowed(userId, Raid.Availability.Yes))
+                    if (raid.IsAvailabilityChangeAllowed(userId, Constants.Availability.Yes))
                     {
-                        raid.Users[userId].Availability = Raid.Availability.Yes;
+                        raid.Users[userId].Availability = Constants.Availability.Yes;
                     }
                 }
                 else if (emote.Equals(Constants.UnsureEmoji))
                 {
-                    raid.Users[userId].Availability = Raid.Availability.Maybe;
+                    raid.Users[userId].Availability = Constants.Availability.Maybe;
                 }
                 else if (emote.Equals(Constants.BackupEmoji))
                 {
-                    raid.Users[userId].Availability = Raid.Availability.Backup;
+                    raid.Users[userId].Availability = Constants.Availability.Backup;
                 }
             }
             else if (!_conversationService.UserHasConversation(user.Id))
             {
                 if (emote.Equals(Constants.SignOnEmoji))
                 {
-                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Availability.Yes);
+                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Constants.Availability.Yes);
                 }
                 else if (emote.Equals(Constants.UnsureEmoji))
                 {
-                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Availability.Maybe);
+                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Constants.Availability.Maybe);
                 }
                 else if (emote.Equals(Constants.BackupEmoji))
                 {
-                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Availability.Backup);
+                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Constants.Availability.Backup);
                 }
             }
             SaveRaids();

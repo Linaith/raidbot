@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Raidbot.Models;
 using Raidbot.Services;
 using System;
 using System.Collections.Generic;
