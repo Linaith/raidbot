@@ -82,6 +82,10 @@ namespace Raidbot.Conversations
         {
             if (_userService.AddAccount(_guildId, _user.Id, _accountType, message, out string errorMessage))
             {
+                if (_user is IGuildUser guildUser)
+                {
+                    await _userService.UpdateNameAsync(guildUser);
+                }
                 await UserExtensions.SendMessageAsync(_user, $"Added the account successfully.\nYour accounts are:\n{_userService.PrintAccounts(_guildId, _user.Id)}");
                 _conversationService.CloseConversation(_user.Id);
             }
