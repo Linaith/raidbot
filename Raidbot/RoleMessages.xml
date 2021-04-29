@@ -89,6 +89,10 @@
       <Name>Oreo</Name>
       <Icon>🍪</Icon>
     </Role>
+    <Role>
+      <Name>Bücherwurm</Name>
+      <Icon>📕</Icon>
+    </Role>
   </LIEB>
   <LIEBAnderes>
     <Role>
