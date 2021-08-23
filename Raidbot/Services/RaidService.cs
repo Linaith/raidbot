@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using static Raidbot.Models.RaidReminder;
 
 namespace Raidbot.Services
 {
@@ -302,8 +303,8 @@ namespace Raidbot.Services
             if (TryFindRaid(raidId, out Raid raid))
             {
                 await SendMessageToEveryRaidMember(raid, text);
-                raid.Reset();
                 raid.StartTime = startTime;
+                raid.Reset();
                 raid.MessageId = await RepostRaidMessage(raid);
                 SaveRaids();
             }
@@ -345,11 +346,7 @@ namespace Raidbot.Services
         {
             if (text.Length > 0)
             {
-                string message = $"{raid.Title} {reason}: ";
-                foreach (string log in text)
-                {
-                    message += $" {log}";
-                }
+                string message = $"{raid.Title} {reason}: " + string.Join(' ', text);
                 await SendMessageToEveryRaidMember(raid, message);
             }
         }
@@ -364,6 +361,43 @@ namespace Raidbot.Services
                     await socketUser.SendMessageAsync(message);
                 }
             }
+        }
+
+        public void AddReminder(Raid raid, ReminderType reminderType, double hoursBeforeRaid, string[] text, ulong channelId = 0)
+        {
+            AddReminder(raid, reminderType, hoursBeforeRaid, string.Join(' ', text), channelId);
+        }
+
+        public void AddReminder(Raid raid, ReminderType reminderType, double hoursBeforeRaid, string message, ulong channelId = 0)
+        {
+            RaidReminder reminder = new RaidReminder(reminderType, message, hoursBeforeRaid, channelId);
+            raid.Reminders.Add(Guid.NewGuid(), reminder);
+            SaveRaids();
+        }
+
+        public string ListReminders(Raid raid)
+        {
+            string message = "reminders:\n";
+            foreach (var reminder in raid.Reminders)
+            {
+                message += $"Reminder type = {reminder.Value.Type}\n";
+                if (reminder.Value.Type == ReminderType.Channel)
+                {
+                    SocketTextChannel channel = (SocketTextChannel)_client.GetChannel(reminder.Value.ChannelId);
+                    message += $"   Channel = {channel.Name}\n";
+                }
+                message += $"   Hours before raid = {reminder.Value.HoursBeforeRaid}\n";
+                message += $"   Message = {reminder.Value.Message}\n";
+                message += $"   Reminder Id = {reminder.Key}\n";
+            }
+            return message;
+        }
+
+        public bool RemoveReminder(Raid raid, Guid reminderId)
+        {
+            bool result = raid.Reminders.Remove(reminderId);
+            SaveRaids();
+            return result;
         }
     }
 }

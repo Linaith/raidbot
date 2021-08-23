@@ -1,4 +1,5 @@
 ﻿using Discord.WebSocket;
+using Raidbot.Models;
 using System;
 
 namespace Raidbot.Services
@@ -8,7 +9,6 @@ namespace Raidbot.Services
         static System.Timers.Timer _t;
         private readonly RaidService _raidService;
         private readonly DiscordSocketClient _client;
-        private const int REMINDER_INTERVAL = 30;
 
         public TimerService(RaidService raidService, DiscordSocketClient client)
         {
@@ -34,14 +34,25 @@ namespace Raidbot.Services
             DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, cet);
             try
             {
-                foreach (var raid in _raidService.ListRaids())
+                foreach (Raid raid in _raidService.ListRaids())
                 {
-                    if (raid.StartTime.CompareTo(now.AddMinutes(REMINDER_INTERVAL)) <= 0 && !raid.ReminderSent)
+                    foreach (RaidReminder reminder in raid.Reminders.Values)
                     {
-                        string message = $"The raid \"{raid.Title}\" starts in {REMINDER_INTERVAL} minutes.";
-                        await _raidService.SendMessageToEveryRaidMember(raid, message);
-                        raid.ReminderSent = true;
-                        _raidService.SaveRaids();
+                        if (!reminder.Sent && now >= raid.StartTime.AddHours(reminder.HoursBeforeRaid * -1))
+                        {
+                            string message = $"{raid.Title}: " + reminder.Message;
+                            if (reminder.Type == RaidReminder.ReminderType.User)
+                            {
+                                await _raidService.SendMessageToEveryRaidMember(raid, message);
+                            }
+                            else
+                            {
+                                SocketTextChannel channel = (SocketTextChannel)_client.GetChannel(reminder.ChannelId);
+                                await channel.SendMessageAsync(message);
+                            }
+                            reminder.Sent = true;
+                            _raidService.SaveRaids();
+                        }
                     }
                 }
             }
@@ -60,8 +71,8 @@ namespace Raidbot.Services
                     {
                         if (raid.Frequency > 0)
                         {
-                            raid.Reset();
                             raid.StartTime = raid.StartTime.AddDays(raid.Frequency);
+                            raid.Reset();
                             raid.MessageId = await _raidService.RepostRaidMessage(raid);
                         }
                         else

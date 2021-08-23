@@ -74,14 +74,6 @@
       <Icon>&#128247;</Icon>
     </Role>
     <Role>
-      <Name>Meme</Name>
-      <Icon>&#128243;</Icon>
-    </Role>
-    <Role>
-      <Name>Inspiro</Name>
-      <Icon>🖼️</Icon>
-    </Role>
-    <Role>
       <Name>Tierbilder</Name>
       <Icon>🐈‍⬛</Icon>
     </Role>
@@ -134,6 +126,10 @@
     <Role>
       <Name>EpicRPG</Name>
       <Icon>⚔️</Icon>
+    </Role>
+    <Role>
+      <Name>Tabletop Simulator</Name>
+      <Icon>🎲</Icon>
     </Role>
   </LIEBAnderes>
 </Messages>

@@ -39,8 +39,8 @@ namespace Raidbot.Conversations
             SignUpConversation conversation = new SignUpConversation(conversationService, raidService, userService, reaction.Channel, user, raid, availability);
 
             //remiove reaction
-            IUserMessage userMessage = (IUserMessage)await conversation._channel.GetMessageAsync(conversation._raid.MessageId);
-            await userMessage.RemoveReactionAsync(reaction.Emote, conversation._user);
+            //IUserMessage userMessage = (IUserMessage)await conversation._channel.GetMessageAsync(conversation._raid.MessageId);
+            //await userMessage.RemoveReactionAsync(reaction.Emote, conversation._user);
 
             //send sign up message
             if (reaction.Emote.Equals(Constants.FlexEmoji))

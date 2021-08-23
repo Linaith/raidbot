@@ -121,7 +121,10 @@ namespace Raidbot.Conversations
             if (Parsers.TryParseDateTime(message, out DateTime time))
             {
                 _raid.StartTime = time;
-                _raid.ReminderSent = false;
+                foreach (RaidReminder reminder in _raid.Reminders.Values)
+                {
+                    reminder.Sent = false;
+                }
                 return true;
             }
             else

@@ -126,6 +126,7 @@ namespace Raidbot.Conversations
                 line = strReader.ReadLine();
             }
             _raid.Description = description;
+            _raid.AddStandardReminder();
             return true;
         }
 

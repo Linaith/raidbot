@@ -54,6 +54,7 @@ namespace Raidbot.Conversations
                     break;
                 case State.date:
                     await ProcessDateAsync(message);
+                    _raid.AddStandardReminder();
                     break;
                 case State.duration:
                     await ProcessDurationAsync(message);

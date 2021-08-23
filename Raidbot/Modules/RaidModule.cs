@@ -6,6 +6,7 @@ using Raidbot.Models;
 using Raidbot.Services;
 using System;
 using System.Threading.Tasks;
+using static Raidbot.Models.RaidReminder;
 
 namespace Raidbot.Modules
 {
@@ -83,9 +84,9 @@ namespace Raidbot.Modules
 
         [Command("end")]
         [Summary("ends a raid")]
-        public async Task EndRaidAsync([Summary("Id of the raid")] string raidId, [Summary("Message")] params string[] logs)
+        public async Task EndRaidAsync([Summary("Id of the raid")] string raidId, [Summary("Message")] params string[] text)
         {
-            await DeleteRaidWithMessage(raidId, logs, "ended");
+            await DeleteRaidWithMessage(raidId, text, "ended");
         }
 
         [Command("cancel")]
@@ -385,6 +386,129 @@ namespace Raidbot.Modules
                 {
                     await Context.Channel.SendMessageAsync($"raid {raidId} not found");
                 }
+                await Context.Message.DeleteAsync();
+            }
+
+        }
+
+        [Group("reminder")]
+        public class RaidReminder : ModuleBase<SocketCommandContext>
+        {
+            private readonly RaidService _raidService;
+
+            public RaidReminder(RaidService raidService)
+            {
+                _raidService = raidService;
+            }
+
+            // !raid edit
+            [Command]
+            public async Task DefaultReminderAsync()
+            {
+                await ReplyAsync("existing raid reminder commands:\n" +
+                "!raid reminder add <RaidId> <HoursBeforeRaid> <Message>\n" +
+                "!raid reminder add <RaidId> <#Channel> <HoursBeforeRaid> <Message>\n" +
+                "!raid reminder list <RaidId>\n" +
+                "!raid reminder remove <RaidId> <ReminderId>");
+            }
+
+            // !raid reminder add 12345678900 24 This is a reminder
+            [Command("add")]
+            public async Task AddReminderAsync([Summary("Id of the raid")] string raidId, double hoursBeforeRaid, [Summary("Message")] params string[] text)
+            {
+                if (_raidService.TryFindRaid(raidId, out Raid raid))
+                {
+                    _raidService.AddReminder(raid, ReminderType.User, hoursBeforeRaid, text);
+                    await Context.Channel.SendMessageAsync($"reminder added");
+                    return;
+                }
+                else
+                {
+                    await Context.Channel.SendMessageAsync("raid not found.");
+                }
+                await Context.Message.DeleteAsync();
+            }
+
+            // !raid reminder add 12345678900 #Channel 24 This is a reminder
+            [Command("add")]
+            public async Task AddReminderAsync([Summary("Id of the raid")] string raidId, string channelName, double hoursBeforeRaid, [Summary("Message")] params string[] text)
+            {
+                if (_raidService.TryFindRaid(raidId, out Raid raid))
+                {
+                    foreach (SocketGuildChannel channel in Context.Message.MentionedChannels)
+                    {
+                        if (channel is ITextChannel)
+                        {
+                            _raidService.AddReminder(raid, ReminderType.Channel, hoursBeforeRaid, text, channel.Id);
+                            await Context.Channel.SendMessageAsync($"reminder added");
+                            return;
+                        }
+                    }
+                    await Context.Channel.SendMessageAsync($"channel not found.");
+                }
+                else
+                {
+                    await Context.Channel.SendMessageAsync("raid not found.");
+                }
+                await Context.Message.DeleteAsync();
+            }
+
+            // !raid reminder list 12345678900
+            [Command("list")]
+            public async Task ListRemindersAsync(string raidId)
+            {
+                if (_raidService.TryFindRaid(raidId, out Raid raid))
+                {
+                    await Context.Channel.SendMessageAsync(_raidService.ListReminders(raid));
+                }
+                else
+                {
+                    await Context.Channel.SendMessageAsync("raid not found.");
+                }
+                await Context.Message.DeleteAsync();
+            }
+
+            // !raid reminder remove 12345678900 298bb4ed-fc0a-4961-be70-b1c7f4490229
+            [Command("remove")]
+            public async Task RemoveReminderAsync(string raidId, string reminderId)
+            {
+                if (_raidService.TryFindRaid(raidId, out Raid raid))
+                {
+                    if (Guid.TryParse(reminderId, out Guid id))
+                    {
+                        if (_raidService.RemoveReminder(raid, id))
+                        {
+                            await Context.Channel.SendMessageAsync("reminder removed.");
+                        }
+                        else
+                        {
+                            await Context.Channel.SendMessageAsync("reminder not found.");
+                        }
+                    }
+                    else
+                    {
+                        await Context.Channel.SendMessageAsync("invalid reminder Id.");
+                    }
+                }
+                else
+                {
+                    await Context.Channel.SendMessageAsync("raid not found.");
+                }
+                await Context.Message.DeleteAsync();
+            }
+
+            // !raid reminder repair
+            [Command("repair")]
+            public async Task RepairRemindersAsync()
+            {
+                foreach (Raid raid in _raidService.ListRaids())
+                {
+                    if (raid.StandardReminderId == null)
+                    {
+                        raid.AddStandardReminder();
+                    }
+                }
+                await Context.Channel.SendMessageAsync("added standard reminders to raids.");
                 await Context.Message.DeleteAsync();
             }
         }
