@@ -12,6 +12,8 @@ namespace Raidbot.Users
 
         public ulong GuildId { get; }
 
+        public ulong LogChannelId { get; set; }
+
         public DiscordServer(ulong guildId)
         {
             UsableAccountTypes = new List<string>();

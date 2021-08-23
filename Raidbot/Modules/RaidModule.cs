@@ -135,7 +135,7 @@ namespace Raidbot.Modules
         {
             if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
-                Constants.Availability availabilityEnum = Constants.Availability.Yes;
+                Constants.Availability availabilityEnum = Constants.Availability.SignedUp;
                 switch (availability.ToLower())
                 {
                     case "maybe":
@@ -163,7 +163,7 @@ namespace Raidbot.Modules
                 {
                     await Context.Channel.SendMessageAsync("wrong number of parameters.");
                 }
-                Constants.Availability availability = Constants.Availability.Yes;
+                Constants.Availability availability = Constants.Availability.SignedUp;
                 string resultMessage = string.Empty;
                 for (int i = 0; i < users.Length; i += 3)
                 {
@@ -206,7 +206,7 @@ namespace Raidbot.Modules
         {
             if (_raidService.TryFindRaid(raidId, out Raid raid))
             {
-                Constants.Availability availabilityEnum = Constants.Availability.Yes;
+                Constants.Availability availabilityEnum = Constants.Availability.SignedUp;
                 switch (availability.ToLower())
                 {
                     case "maybe":
@@ -503,7 +503,7 @@ namespace Raidbot.Modules
             {
                 foreach (Raid raid in _raidService.ListRaids())
                 {
-                    if (raid.StandardReminderId == null)
+                    if (raid.StandardReminderId == Guid.Empty)
                     {
                         raid.AddStandardReminder();
                     }

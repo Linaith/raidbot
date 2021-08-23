@@ -50,7 +50,7 @@ namespace Raidbot.Models
         public int Frequency { get; set; }
 
         //Roles that cout to the user cap
-        private readonly List<Availability> blockingRole = new List<Availability> { Availability.Yes };
+        private readonly List<Availability> blockingRole = new List<Availability> { Availability.SignedUp };
 
         public Raid(string raidId, int frequency)
         {
@@ -131,8 +131,8 @@ namespace Raidbot.Models
 
         public bool IsAvailabilityChangeAllowed(ulong userId, Availability availability)
         {
-            bool isCurrentlyRestrictedAvailability = Users[userId].Availability.Equals(Availability.Yes);
-            bool IsChangeToRestrictedAvailability = availability.Equals(Availability.Yes);
+            bool isCurrentlyRestrictedAvailability = Users[userId].Availability.Equals(Availability.SignedUp);
+            bool IsChangeToRestrictedAvailability = availability.Equals(Availability.SignedUp);
 
             //user is signed up with yes, or there are free spots, or user doesn't want to change to yes
             return isCurrentlyRestrictedAvailability || GetFreeRoles().Contains(Users[userId].Role, StringComparer.OrdinalIgnoreCase) || !IsChangeToRestrictedAvailability;
@@ -179,7 +179,7 @@ namespace Raidbot.Models
             {
                 int noSignedUpUsers = 0;
                 //print signed up users
-                string signedUpUsers = PrintUsers(role, Availability.Yes, ref noSignedUpUsers);
+                string signedUpUsers = PrintUsers(role, Availability.SignedUp, ref noSignedUpUsers);
                 signedUpUsers += PrintUsers(role, Availability.Maybe, ref noSignedUpUsers);
                 signedUpUsers += PrintUsers(role, Availability.Backup, ref noSignedUpUsers);
                 signedUpUsers += PrintFlexUsers(role);
@@ -235,7 +235,7 @@ namespace Raidbot.Models
 
         private string PrintAvailability(Availability availability)
         {
-            if (availability.Equals(Availability.Yes))
+            if (availability.Equals(Availability.SignedUp))
             {
                 return String.Empty;
             }

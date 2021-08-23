@@ -11,11 +11,13 @@ namespace Raidbot.Services
     public class ConversationService
     {
         private readonly UserService _userService;
+        private readonly LogService _logService;
         private readonly Dictionary<ulong, IConversation> _conversations;
 
-        public ConversationService(UserService userService)
+        public ConversationService(UserService userService, LogService logService)
         {
             _userService = userService;
+            _logService = logService;
             _conversations = new Dictionary<ulong, IConversation>();
         }
 
@@ -69,7 +71,7 @@ namespace Raidbot.Services
 
         public async void OpenSignUpConversation(RaidService raidService, SocketReaction reaction, IGuildUser user, Raid raid, Constants.Availability availability)
         {
-            _conversations.Add(user.Id, await SignUpConversation.Create(this, raidService, _userService, reaction, user, raid, availability));
+            _conversations.Add(user.Id, await SignUpConversation.Create(this, raidService, _userService, _logService, reaction, user, raid, availability));
         }
 
         public void CloseConversation(ulong userId)

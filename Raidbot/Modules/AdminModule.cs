@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Raidbot.Services;
 using Raidbot.Users;
 using System.Threading.Tasks;
@@ -30,7 +31,9 @@ namespace Raidbot.Modules
                 "!admin deleterolemessage  -  Removes the role message and the user roles.\n" +
                 "!admin addaccounttype <accountType> -  Adds a new AccountType to the server.\n" +
                 "!admin removeaccounttype <accountType> -  Removed a new AccountType from the server.\n" +
-                "!admin changenames <true | false> - activates or deactivates renaming the discord users.";
+                "!admin changenames <true | false> - activates or deactivates renaming the discord users.\n" +
+                "!admin setlogchannel <#channel> - activates channel logging.\n" +
+                "!admin removelogchannel - deactivates channel logging.";
             await ReplyAsync(helpMessage);
         }
 
@@ -86,6 +89,40 @@ namespace Raidbot.Modules
             {
                 await ReplyAsync($"wrong parameter, only \"true\" or \"false\" allowed.");
             }
+        }
+
+        [Command("setlogchannel")]
+        [Summary("sets the log channel of the Server")]
+        public async Task SetLogchannelAsync(string logChannel)
+        {
+            if (Context.Message.MentionedChannels.Count > 0)
+            {
+                foreach (SocketGuildChannel channel in Context.Message.MentionedChannels)
+                {
+                    if (channel is ITextChannel)
+                    {
+                        _userService.SetLogChannelId(Context.Guild.Id, channel.Id);
+                        await ReplyAsync($"set log channel to {channel.Name}");
+                        return;
+                    }
+                    else
+                    {
+                        await ReplyAsync($"channel {channel.Name} is not a text channel.");
+                    }
+                }
+            }
+            else
+            {
+                await ReplyAsync($"no mentiones channel found");
+            }
+        }
+
+        [Command("removelogchannel")]
+        [Summary("removes the log channel of the Server")]
+        public async Task RemoveLogchannelAsync()
+        {
+            _userService.RemoveLogChannelId(Context.Guild.Id);
+            await ReplyAsync($"disabled the channel logging");
         }
     }
 }

@@ -20,15 +20,18 @@ namespace Raidbot.Services
 
         private readonly DiscordSocketClient _client;
 
+        private readonly LogService _logService;
+
         private static readonly Random _random = new Random();
 
-        public RaidService(UserService userService, ConversationService conversationService, DiscordSocketClient client)
+        public RaidService(UserService userService, ConversationService conversationService, DiscordSocketClient client, LogService logService)
         {
             Raids = new Dictionary<string, Raid>();
             LoadRaids();
             _userService = userService;
             _conversationService = conversationService;
             _client = client;
+            _logService = logService;
         }
 
         public IEnumerable<Raid> ListRaids()
@@ -217,6 +220,7 @@ namespace Raidbot.Services
 
             if (emote.Equals(Constants.SignOffEmoji))
             {
+                await _logService.LogRaid($"{raid.Users[user.Id].Nickname} signed off", raid);
                 RemoveUser(raid.RaidId, user.Id);
                 SaveRaids();
                 await userMessage.ModifyAsync(msg => msg.Embed = raid.CreateRaidMessage());
@@ -243,9 +247,9 @@ namespace Raidbot.Services
             {
                 if (emote.Equals(Constants.SignOnEmoji))
                 {
-                    if (raid.IsAvailabilityChangeAllowed(userId, Constants.Availability.Yes))
+                    if (raid.IsAvailabilityChangeAllowed(userId, Constants.Availability.SignedUp))
                     {
-                        raid.Users[userId].Availability = Constants.Availability.Yes;
+                        raid.Users[userId].Availability = Constants.Availability.SignedUp;
                     }
                 }
                 else if (emote.Equals(Constants.UnsureEmoji))
@@ -256,12 +260,13 @@ namespace Raidbot.Services
                 {
                     raid.Users[userId].Availability = Constants.Availability.Backup;
                 }
+                await _logService.LogRaid($"{raid.Users[userId].Nickname} changed status to {raid.Users[userId].Availability}", raid);
             }
             else if (!_conversationService.UserHasConversation(user.Id))
             {
                 if (emote.Equals(Constants.SignOnEmoji))
                 {
-                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Constants.Availability.Yes);
+                    _conversationService.OpenSignUpConversation(this, reaction, user, raid, Constants.Availability.SignedUp);
                 }
                 else if (emote.Equals(Constants.UnsureEmoji))
                 {

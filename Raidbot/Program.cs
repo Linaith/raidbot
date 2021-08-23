@@ -32,6 +32,7 @@ namespace Raidbot
                 .AddSingleton<CommandHandler>()
                 .AddSingleton<RoleService>()
                 .AddSingleton<UserService>()
+                .AddSingleton<LogService>()
                 .AddSingleton<ConversationService>()
                 .AddSingleton<TimerService>()
                 .AddSingleton<RaidService>()

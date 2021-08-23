@@ -226,5 +226,19 @@ namespace Raidbot.Services
         {
             return GetUser(guildId, userId).GuildNickname;
         }
+
+        public void SetLogChannelId(ulong guildId, ulong logchannelId)
+        {
+            DiscordServer server = GetServer(guildId);
+            server.LogChannelId = logchannelId;
+            SaveUsers();
+        }
+
+        public void RemoveLogChannelId(ulong guildId)
+        {
+            DiscordServer server = GetServer(guildId);
+            server.LogChannelId = 0;
+            SaveUsers();
+        }
     }
 }

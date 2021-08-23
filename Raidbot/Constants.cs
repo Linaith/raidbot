@@ -17,7 +17,7 @@ namespace Raidbot
         public const string SAVEFOLDER = "data";
         public const string ACCOUNT_REGEX = "^[a-zA-z ]{3,27}\\.[0-9]{4}$";
         public const int MaxFlexRoles = 2;
-        public enum Availability { Yes, Maybe, Backup, Flex };
+        public enum Availability { SignedUp, Maybe, Backup, Flex };
 
         /*
         readonly IEmote[] reactions = new IEmote[] { //Emote.Parse("<:warrior_spellbreaker:666957477690081290>"),

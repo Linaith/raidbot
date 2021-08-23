@@ -21,8 +21,9 @@ namespace Raidbot.Conversations
         private State _state;
         private readonly RaidService _raidService;
         private readonly UserService _userService;
+        private readonly LogService _logService;
 
-        private SignUpConversation(ConversationService conversationService, RaidService raidService, UserService userService, ISocketMessageChannel channel, IGuildUser user, Raid raid, Constants.Availability availability) : base(conversationService, user)
+        private SignUpConversation(ConversationService conversationService, RaidService raidService, UserService userService, LogService logService, ISocketMessageChannel channel, IGuildUser user, Raid raid, Constants.Availability availability) : base(conversationService, user)
         {
             _user = user;
             _channel = channel;
@@ -31,12 +32,13 @@ namespace Raidbot.Conversations
             _raidService = raidService;
             _userService = userService;
             _state = State.role;
+            _logService = logService;
         }
 
-        public static async Task<SignUpConversation> Create(ConversationService conversationService, RaidService raidService, UserService userService, SocketReaction reaction, IGuildUser user, Raid raid, Constants.Availability availability)
+        public static async Task<SignUpConversation> Create(ConversationService conversationService, RaidService raidService, UserService userService, LogService logService, SocketReaction reaction, IGuildUser user, Raid raid, Constants.Availability availability)
         {
             //Create Conversation
-            SignUpConversation conversation = new SignUpConversation(conversationService, raidService, userService, reaction.Channel, user, raid, availability);
+            SignUpConversation conversation = new SignUpConversation(conversationService, raidService, userService, logService, reaction.Channel, user, raid, availability);
 
             //remiove reaction
             //IUserMessage userMessage = (IUserMessage)await conversation._channel.GetMessageAsync(conversation._raid.MessageId);
@@ -147,6 +149,7 @@ namespace Raidbot.Conversations
                     await UserExtensions.SendMessageAsync(_user, resultMessage);
                     IUserMessage userMessage = (IUserMessage)await _channel.GetMessageAsync(_raid.MessageId);
                     await userMessage.ModifyAsync(msg => msg.Embed = _raid.CreateRaidMessage());
+                    await _logService.LogRaid($"{_raid.Users[_user.Id].Nickname} signed up as {_availability}", _raid);
                 }
                 catch { }
                 finally
