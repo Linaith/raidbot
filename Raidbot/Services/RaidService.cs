@@ -360,11 +360,15 @@ namespace Raidbot.Services
         {
             foreach (var user in raid.Users)
             {
-                SocketUser socketUser = _client.GetUser(user.Value.DiscordId);
-                if (socketUser != null)
+                try
                 {
-                    await socketUser.SendMessageAsync(message);
+                    SocketUser socketUser = _client.GetUser(user.Value.DiscordId);
+                    if (socketUser != null)
+                    {
+                        await socketUser.SendMessageAsync(message);
+                    }
                 }
+                catch { }
             }
         }
 
