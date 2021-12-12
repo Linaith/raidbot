@@ -220,7 +220,14 @@ namespace Raidbot.Services
 
             if (emote.Equals(Constants.SignOffEmoji))
             {
-                await _logService.LogRaid($"{raid.Users[user.Id].Nickname} signed off", raid);
+                if (raid.Users.ContainsKey(user.Id))
+                {
+                    await _logService.LogRaid($"{raid.Users[user.Id].Nickname} signed off", raid);
+                }
+                else if (raid.FlexRoles.FindAll(x => x.DiscordId == user.Id).Count > 0)
+                {
+                    await _logService.LogRaid($"{raid.FlexRoles.Find(x => x.DiscordId == user.Id).Nickname} signed off", raid);
+                }
                 RemoveUser(raid.RaidId, user.Id);
                 SaveRaids();
                 await userMessage.ModifyAsync(msg => msg.Embed = raid.CreateRaidMessage());
