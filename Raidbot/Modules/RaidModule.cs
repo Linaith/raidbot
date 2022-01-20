@@ -57,6 +57,7 @@ namespace Raidbot.Modules
             foreach (string param in parameters)
             {
                 if (param.Equals("text", StringComparison.OrdinalIgnoreCase)) text = true;
+                if (frequency == 0 && param.Equals("biweekly", StringComparison.OrdinalIgnoreCase)) frequency = 14;
                 if (frequency == 0 && param.Equals("weekly", StringComparison.OrdinalIgnoreCase)) frequency = 7;
                 if (frequency == 0 && param.Equals("daily", StringComparison.OrdinalIgnoreCase)) frequency = 1;
             }
