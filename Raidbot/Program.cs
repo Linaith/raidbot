@@ -22,7 +22,9 @@ namespace Raidbot
             {
                 Directory.CreateDirectory(Constants.SAVEFOLDER);
             }
-            _client = new DiscordSocketClient();
+            DiscordSocketConfig config = new DiscordSocketConfig();
+            config.AlwaysDownloadUsers = true;
+            _client = new DiscordSocketClient(config);
             _client.Log += Log;
 
 
