@@ -59,6 +59,22 @@
       <Name>Strike Missions</Name>
       <Icon>⚔️</Icon>
     </Role>
+    <Role>
+      <Name>Eisbrut Saga Strikes + DRMs</Name>
+      <Icon>🐸</Icon>
+    </Role>
+    <Role>
+      <Name>EOD Strikes</Name>
+      <Icon>🐉</Icon>
+    </Role>
+    <Role>
+      <Name>EOD Strike CMs</Name>
+      <Icon>🔥</Icon>
+    </Role>
+    <Role>
+      <Name>SAB</Name>
+      <Icon>💠</Icon>
+    </Role>
   </GW2Raid>
   <LIEB>
     <Role>
