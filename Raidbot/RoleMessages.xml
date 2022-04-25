@@ -101,6 +101,10 @@
       <Name>Bücherwurm</Name>
       <Icon>📕</Icon>
     </Role>
+	<Role>
+		<Name>Sonstige Spiele</Name>
+		<Icon>👾</Icon>
+	</Role>
   </LIEB>
   <LIEBAnderes>
     <Role>
