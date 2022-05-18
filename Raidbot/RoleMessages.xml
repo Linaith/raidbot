@@ -105,6 +105,10 @@
 		<Name>Sonstige Spiele</Name>
 		<Icon>👾</Icon>
 	</Role>
+	<Role>
+		<Name>LIEB Termine</Name>
+		<Icon>📅</Icon>
+	</Role>
   </LIEB>
   <LIEBAnderes>
     <Role>
