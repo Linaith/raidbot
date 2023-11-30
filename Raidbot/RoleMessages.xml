@@ -78,10 +78,6 @@
   </GW2Raid>
   <LIEB>
     <Role>
-      <Name>NSFW</Name>
-      <Icon>&#128683;</Icon>
-    </Role>
-    <Role>
       <Name>Gildenkeller</Name>
       <Icon>&#9939;</Icon>
     </Role>
@@ -109,6 +105,10 @@
 		<Name>LIEB Termine</Name>
 		<Icon>📅</Icon>
 	</Role>
+	  <Role>
+		  <Name>GW1 Kampagnenhilfe</Name>
+		  <Icon>🏆</Icon>
+	  </Role>
   </LIEB>
   <LIEBAnderes>
     <Role>
